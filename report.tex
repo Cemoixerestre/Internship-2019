@@ -1,0 +1,154 @@
+\documentclass{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\newcommand{\iassert}[1]{\mathtt{Assert}(#1)}
+\newcommand{\icheck}{\mathtt{Check}()}
+\newcommand{\icheckpoint}{\mathtt{Checkpoint}()}
+\newcommand{\ibacktrack}[1]{\mathtt{Backtrack}(#1)}
+
+\title{Notes on Gomory Cuts}
+\author{Alban Reynaud}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\end{abstract}
+
+\section{Introduction}
+\subsection{SMT Solving and Linear Arithmetic}
+Let $T$ be a quantifier-free theory. A $T$-solver is an algorithm to check if a
+finite set of atom of $T$ can be satisfied.
+
+For example, the theory of \textit{linear arithmetic} is composed of atoms (also
+called \textit{constraints}) of the form
+$$\sum_{i < n} a_i x_i \bowtie b$$
+where $a_0, ..., a_{n-1}, b$ are rational constants, $x_0, ..., x_{n-1}$ are
+variables and $\bowtie \in \{=,\leqslant,\geqslant,<,>\}$ is a comparison
+operator. An assignement $v$ is a function that maps variables to rationals.
+If $c = \sum a_i x_i \bowtie b$ is a constraint,  we say that the assignement
+$v$ satisfies the constraint c (or $v \vDash c$) if
+$$\sum a_i v(x_i) \bowtie b$$.
+
+Let $\Phi$ be a boolean formula of atoms of the theory $T$. We may want to find
+an assignement $v$ that satisfies $\Phi$, or to know if no such assignement
+exists. This problem is called \textbf{Satisfiability Modulo Theory} (SMT).
+
+For example, a SMT instance based on linear arithmetic would be:
+$$\Phi \equiv (A \vee B \vee C) \wedge (\neg A \vee B) \wedge
+              (\neg A \vee C \vee D) \wedge (\neg C \vee D)$$
+with
+\begin{displaymath}
+\begin{array}{lclccc}
+  A & \equiv &x  & + & y & \geqslant 3 \\
+  B & \equiv &x  &   &   & \leqslant 1 \\
+  C & \equiv &   &   & y & \leqslant 1 \\
+  D & \equiv &y  & - & x & < 2         \\
+\end{array}
+\end{displaymath}
+
+%TODO: give a section number
+An efficient procedure to solve SMT problems is DPLL($T$) \cite{Decision2016},
+which works as a combination of a SAT-solver and a $T$-solver. Here is a quick
+description of such an algorithm:
+\begin{itemize}
+  \item Replace every atom by a SAT variable to obtain a SAT formula $\Phi$.
+    Run a SAT-solver to find a valuation of each variable to 0 or 1 that
+    satisfies this SAT-formula.
+  \item From this affectation, derive a conjuction of $T$-atoms. Run a
+    $T$-solver to find an assignement that satisfies this conjuction.
+  \item If an assignment $v$ is found, return $v$
+  \item If no assignment is found, from thus conjuction find a contradicting
+    subset of atoms. From this subset, derive a new constraint, add it to the
+    SAT-formula $\Phi$, and go to the first step.
+\end{itemize}
+
+To work efficiently in combination with the SAT-solver, we may assume that the
+$T$-solver implements the following interface:
+\begin{itemize}
+  \item $\iassert{\alpha}$: Asserts the atom $\alpha$. It is added to the set of
+    $T$-atoms the should be satisfied.
+  \item $\icheck$: Runs a $T$-solver to find an assignment to the set of
+    asserted atoms. If such an assignement is found, returns it. Otherwise,
+    returns a subset of inconsistent assert atoms.
+  \item $\icheckpoint$: Returns a checkpoint $c$ that contains all the necessary
+    information to backtrack to the current state.
+  \item $\ibacktrack{c}$: Backtrack to the state represented by the checkpoint
+    $c$.
+\end{itemize}
+
+%TODO: explain why it is called an incremental interface
+We will call such an inteface an \textit{incremental interface}.
+A similar description can be found in \cite{Dutertre2006} and
+\cite{Thiemann2018}.
+
+\textbf{Example:} let us solve the formula $\Phi$ using a DPLL($T$) procedure:
+\begin{itemize}
+  \item Arbitrarily affects $A$ to 1. Asserts the atom $A$. Get a checkpoints
+    $c_1$.
+  \item To solve the clause $(\neg A \vee B)$, we must affect $B$ to 1.
+    Asserts the atom $B$. Get a checkpoint $c_2$.
+  \item Affects $C$ to 1. Asserts the atom $C$. Get a checkpoint $c_3$.
+  \item To solve the clause $(\neg C \vee D)$, we must affect $D$ to 1.
+    Asserts the atom $D$. Get a checkpoint $c_4$.
+\end{itemize}
+
+Now, we have found an valuation that satisfies $\Phi$ interpreted as a
+SAT-formula. But we need to check if this valuation is compatible with an
+assignment in the theory of linear arithmetic. It means that we need to find an
+assignment to the conjuction $A \wedge B \wedge C \wedge D$, which is equivalent
+to the system:
+\begin{displaymath}
+  \left\{
+  \begin{array}{ccccr}
+    x  & + & y & \geqslant 3 & (A) \\
+    x  &   &   & \leqslant 1 & (B) \\
+       &   & y & \leqslant 1 & (C) \\
+    y  & - & x & < 2         & (D) \\
+  \end{array}
+  \right.
+\end{displaymath}
+
+But this system has no solution. The procedure $\icheck$ may retun that the
+constraints $A$, $B$ and $C$ are mutually incompatible. As these three
+constraints cannot be satisfied simultaneously, an assignement that satisfies
+$\Phi$ must violate at least one of these constraints, so we can deduce that the
+clause $(\neg A \vee \neg B \vee \neg C)$ is true. Instead of solving $\Phi$, we
+will try to solve $\Phi' = \Phi \wedge (\neg A \vee \neg B \vee \neg C)$. We
+need to backtrack, but we can notice that we could bactrack just before
+the choice to affect $C$ to 1 was made. So let us backtrack to $c_2$, where only
+$A$ and $B$ are affected.
+
+\begin{itemize}
+  \item To solve the clause $(\neg A \vee \neg B \vee \neg C)$, we must affect
+    $C$ to 0. Asserts the atom $\neg C$. Get a checkpoint $c'_3$.
+  \item To solve the clause $(\neg A \vee C \vee D)$, we must affect $D$ to 1.
+    Asserts the atom $D$. Get a checkpoint $c'_4$.
+\end{itemize}
+
+Again, we have a valuation that satisfies $\Phi'$ interpreted as a
+SAT-formula. We have to find an assignement that satisfies the conjuction
+$A \wedge B \wedge \neg C \wedge D$, which is equivalent
+to the system:
+\begin{displaymath}
+  \left\{
+  \begin{array}{ccccr}
+    x  & + & y & \geqslant 3 & (A) \\
+    x  &   &   & \leqslant 1 & (B) \\
+       &   & y & > 1         & (\neg C) \\
+    y  & - & x & < 2         & (D) \\
+  \end{array}
+  \right.
+\end{displaymath}
+
+$\icheck$ may return the assignement $(x=1, y=2)$. Finally, the formula $\Phi$
+is satisfiable, and $(x=1, y=2) \vDash \Phi$.
+
+\bibliographystyle{plain}
+\bibliography{sources}
+\end{document}
