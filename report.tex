@@ -4,11 +4,36 @@
 \usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage{isabelle}
+\usepackage{isabellesym}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usepackage{ifthen}
 
 \newcommand{\iassert}[1]{\mathtt{Assert}(#1)}
 \newcommand{\icheck}{\mathtt{Check}()}
 \newcommand{\icheckpoint}{\mathtt{Checkpoint}()}
 \newcommand{\ibacktrack}[1]{\mathtt{Backtrack}(#1)}
+\newcommand{\csat}{\mathtt{Satisfiable}}
+\newcommand{\cunsat}{\mathtt{Unsatisfiable}}
+
+% Source: https://isabelle.in.tum.de/community/Generate_TeX_Snippets
+\newcommand{\DefineSnippet}[2]{%
+  \expandafter\newcommand\csname snippet--#1\endcsname{%
+    \begin{quote}
+    \begin{isabelle}
+    #2
+    \end{isabelle}
+    \end{quote}}}
+\newcommand{\Snippet}[1]{%
+  \ifcsname snippet--#1\endcsname{\csname snippet--#1\endcsname}%
+  \else+++++++ERROR: Snippet ``#1 not defined+++++++ \fi}
+
+\input{../test-cantor-theorem/generated/snippets}
+
+\newtheorem{definition}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
 
 \title{Internship Report}
 \author{Alban Reynaud}
@@ -22,8 +47,34 @@
 \end{abstract}
 
 \section{Introduction}
-\subsection{Isabelle}
-\textit{TODO}
+\subsection{The Isabelle Proof Assistant}
+Isabelle \cite{Isabelle} is a generic proof assistant. Isabelle/HOL
+(abbreviation of \textit{Higer Order Logic}) is a specialization that is
+generally used.
+
+One of the feature of Isabelle is the use of mathematical symbols to make the
+proofs more readable. It also uses automatic provers.
+Moreover, there is the language \textit{Isar} that can is used to conduct proofs
+in a structured way.
+
+%TODO: give a section number for the book
+For example, here is a proof of the Cantor Theorem (the fact that there is no
+surjection from a set $A$ to its powerset), taken from \cite{ConcreteSemantics}
+with Isabelle and Isar:
+\Snippet{cantor}
+
+The outline of the proof is the following:
+\begin{itemize}
+  \item We assume that there exist a surjective function $f$ from $A$ to
+    its powerset.
+  \item We deduce that there exists an element $a$ of $A$ such that
+    $f(a) = \{x~|~x \notin f(x)\}$
+  \item But from the following fact we can deduce that both $a \in f(a)$ and $a
+    \notin f(a)$ which is a contradiction (represented by the proposition
+    $\mathtt{False}$).
+\end{itemize}
+To prove each of these facts, the automatic provers $\mathtt{blast}$ and
+$\mathtt{auto}$ are used.
 
 \subsection{SMT Solving and Linear Arithmetic}
 \label{smt}
@@ -40,15 +91,33 @@ If $c = \sum a_i x_i \bowtie b$ is a constraint,  we say that the assignement
 $v$ satisfies the constraint c (or $v \vDash c$) if
 $$\sum a_i v(x_i) \bowtie b$$.
 
-The other theory we will study is the theory of \textit{mixed-integer linear
-arithmetic}. It consists of linear arithmetic problems where some variables are
-required to be integer.
-%TODO: give an example
-
 Note that we are only interested in the decision problem (\textit{i.e} checking
 if a set of constraints admits a satisfying assignment), not the optimization
 problem (\textit{i.e} finding an assignment satisfying the constraints that
 maximizes a linear objective function). 
+
+The other theory we will study is the theory of \textit{mixed-integer linear
+arithmetic}. A mixed-integer linear problem (MILP)
+consists of linear problem where some variables are
+required to be integer. Furthermore, if all the variables are required to be
+integer, the problem is called an \textit{integer linear problem} (ILP).
+
+For example:
+\begin{displaymath}
+  \left\{
+  \begin{array}{cc}
+    x + y & \geqslant 3 \\
+    y - x & < 2 \\
+    x \in \mathbb{Z}
+  \end{array}
+  \right.
+\end{displaymath}
+is a MILP.
+
+More formally, if $S$ in a set of linear constraints and $I$ the set of
+variables that are required to be integer, if $v$ is a valuation, I will use the
+notation $$v \vDash_I S$$ for $v \vDash S$ and
+$\forall x_i \in I.~v(x_i) \in \mathbb{Z}$.
 
 Let $\Phi$ be a boolean formula of atoms of the theory $T$. We may want to find
 an assignement $v$ that satisfies $\Phi$, or to know if no such assignement
@@ -97,7 +166,7 @@ $T$-solver implements the following interface:
     returns a subset of inconsistent assert atoms.
   \item $\icheckpoint$: Returns a checkpoint $c$ that contains all the necessary
     information to backtrack to the current state.
-  \item $\ibacktrack{c}$: Backtrack to the state represented by the checkpoint
+  \item $\ibacktrack{c}$: Backtracks to the state represented by the checkpoint
     $c$.
 \end{itemize}
 
@@ -110,10 +179,239 @@ An example of an execution of DPLL($T$) is given in appendix \ref{dpll}.
 
 Dutertre and de Moura have proposed a Simplex-based solver to solve linear
 arithmetic \cite{Dutertre2006}. A partial version of this algorithm has been
-formalized in Isabelle by Spacić and Marić \cite{Spacic2012} and extended to
+formalized in Isabelle by Spasić and Marić \cite{Spasic2012} and extended to
 use the incremental interface by Ralph Bottesch, Max Haslbeck and René Thiemann
 \cite{Thiemann2018}. The ultimate goal of this internship is to extend the
-previous work to solve mixed-integer linear problems.
+previous work to solve MILP.
+
+\section{Resolution of Mixed-Integer Linear Problems}
+In this section, I will describe an algorithm to solve MILP and the mathematics
+required to prove its correctness.
+
+\subsection{The Branch-and-Bound algorithm}
+% TODO: give a reference?
+Branch-and-bound is a simple algorithm to solve ILP and MILP. Though it can be
+stated as an optimization algorithm, we will focus on its formulation for
+decision problems.
+
+Let $S$ be a set of linear constraints, and $I$ a set of variables. The
+principle of the algorithm is the following:
+\begin{itemize}
+  \item Search a solution $v$ to the problem $S$. If no solution exists, return
+    $\cunsat$.
+  \item If for all $x_i \in I$, $v(i) \in \mathbb{Z}$, then $v \vDash_I S$.
+    Return $v$.
+  \item If there exists a variable $x_i \in I$ such that
+    $v(x_i) \notin \mathbb{Z}$, we can remark that for all solution of this
+    MILP, either the constraint $x_i \leqslant \lfloor v(x_i) \rfloor$ is
+    satisfied, or  $x_i \geqslant \lceil v(x_i) \rceil$ is satisfied.
+    
+    We can then try to split our initial problem into two subproblems (this is
+    the \textit{branching} step):
+    \begin{itemize}
+      \item Recursively call branch-and-bound on the constraints set
+        $$S \cup \{x_i \leqslant \lfloor v(x_i) \rfloor\}$$ and $I$.
+        If a solution $v'$ is found, return it.
+      \item Recursively call branch-and-bound on the constraints set
+        $$S \cup \{x_i \geqslant \lceil v(x_i) \rceil\}$$ and $I$.
+        If a solution $v'$ is found, return it.
+    \end{itemize}
+  \item If after the branching step no solution is found, return $\cunsat$.
+\end{itemize}
+
+%\begin{algorithmic}[1]
+%  \Procedure{Branch-and-Bound}{$S, I$}
+%
+%  Search for a solution $v$ of $S$
+%  \If{no solution $v$ exists}
+%    \Return $\cunsat$
+%  \ElsIf {$\forall x_i \in I.~v(x_i) \in \mathbb{Z}$}
+%    \Return $v$
+%  \Else
+%    \Return $3v + 4$
+%  \EndIf
+%  \EndProcedure
+%\end{algorithmic}
+
+The problem with this formulation is that the algorithm may loop. For example,
+let us examine the following ILP:
+\begin{equation} \label{pbloop}
+  \left\{
+  \begin{array}{l}
+    3x - 3y \geqslant 1 \\
+    3x - 3y \leqslant 2 \\
+    x, y \in \mathbb{Z} \\
+  \end{array}
+  \right.
+\end{equation}
+
+This problem has no solution, and its relaxation (that is the problem composed
+by the linear inequalities, without the integrality constaints) is unbounded, as
+shown in figure \ref{bbloop}. If we try to run the branch-and-bound algorithm,
+here is what we could obtain:
+\begin{itemize}
+  \item Obtain the solution $(\frac{1}{3}, 0)$. The variable $x$ is not
+    integral. Try to solve the problem with the extra constaint
+    $x \geqslant 1$.
+  \item Obtain the solution $(1, \frac{2}{3})$. The variable $y$ is not
+    integral. Try to solve the new problem with the extra constraint $y
+    \geqslant 1$.
+  \item Obtain the solution $(1 + \frac{1}{3}, 1)$. The variable $x$ is not
+    integral. Try to solve the problem with the extra constaint
+    $x \geqslant 2$.
+  \item Obtain the solution $(2, 1 + \frac{2}{3})$. The variable $y$ is not
+    integral. Try to solve the new problem with the extra constraint $y
+    \geqslant 2$.
+  \item etc...
+\end{itemize}
+
+
+\begin{figure}[h]
+  \centering
+
+  \begin{tikzpicture}
+    %\draw[style=help lines,very thin] (-4, -4) grid (4, 4);
+    \foreach \x in {-3, -2, ..., 3} {
+      \foreach \y in {-3, -2, ..., 3} {
+        \node[draw, circle, fill=black, inner sep=1pt] at (\x, \y) {};
+      }
+    }
+
+    \draw[thick, ->] (0, 0) -- (3.5, 0) node[anchor=west] {x};
+    \draw[thick, ->] (0, 0) -- (0, 3.5) node[anchor=south] {y};
+    \draw[thick, ->] (0, 0) -- (-3.5, 0);
+    \draw[thick, ->] (0, 0) -- (0, -3.5);
+
+
+    \coordinate (C1LEFT) at (-3.167, -3.5);
+    \coordinate (C1RIGHT) at (3.5, 3.167);
+    \coordinate (C2LEFT) at (-2.833, -3.5);
+    \coordinate (C2RIGHT) at (3.5, 2.833);
+    \draw[thick] (C1LEFT) -- (C1RIGHT);
+    \draw[thick] (C2LEFT) -- (C2RIGHT);
+    \fill[fill=red, opacity=0.5]
+      (C1LEFT) -- (C1RIGHT) -- (C2RIGHT) -- (C2LEFT) -- cycle;
+  \end{tikzpicture}
+
+  \label{bbloop}
+  \caption{Graphical representation of the solutions of the problem
+           \ref{pbloop}. The solutions of the relaxation lie in the red area.}
+\end{figure}
+
+In this case, the problem is unbounded so the branch-and-bound algorithm loops.
+This is why we will try to add constraints of the form $-B \leqslant x_i
+\leqslant B$ for all variable $x_i$ so that the problem is bounded and the
+branch-and-bound algorithm terminates. In the next subsections, we will see how
+to compute a bound $B$ such that the problem has a solution if and only if it
+has a solution with $-B \leqslant x_i \leqslant B$ for all variable $x_i$.
+
+\subsection{Obtening bounds for ILPs and MILPs}
+First of all, let us remark that if a linear problem contains only large
+inequalities, it could be put in the form:
+
+\begin{displaymath}
+  \left\{
+  \begin{array}{cccccl}
+    a_{11} x_1 & + & ...    & + & a_{1n} x_n & \leqslant b_1 \\
+               &   & \vdots &   &            &               \\
+    a_{p1} x_0 & + & ...    & + & a_{pn} x_n & \leqslant b_p \\
+  \end{array}
+  \right.
+\end{displaymath}
+
+or in the matrix form $Ax \leqslant b$ with
+$$A = (a_{ij})_{\substack{1 \leqslant i \leqslant n \\
+                          1 \leqslant j \leqslant p}}$$ and
+$b = (b_j)_{1 \leqslant j \leqslant p}$. We identify a valuation of $n$
+variables to a vector of dimension $n$.
+
+To derive bounds, we will use definitions and results that can be found in the
+book of Schrijver \cite{Schrijver1998}.
+
+\begin{definition}[Finitely Generated Cone]
+  A set of point $C$ is a \textup{finitely generated cone}
+  iff $C = cone \{x_0, ..., x_{n-1}\}$ where
+  $$cone \{x_0, ..., x_{n-1}\} =
+      \{\sum_{i<n} \lambda_i x_i~|~\lambda_0, ..., \lambda_{n-1} \leqslant 0\}
+  $$
+  for some $x_0, ..., x_{n-1}$.
+\end{definition}
+
+\begin{definition}[Polyhedral Cone]
+  A set of point $C$ is a \textup{polyhedral cone}
+  iff $C = \{x~|~Ax \leqslant 0\}$ for some matrix $A$.
+\end{definition}
+
+\begin{theorem}[Farkas-Minkowsky-Weyl Theorem]
+  A set $C$ is a finitely generated cone iff is is a polyhedral cone.
+\end{theorem}
+
+\begin{definition}[Polyhedron]
+  A set of points $P$ is a \textup{convex polyhedron} iff
+  $$P = \{x~|~Ax \leqslant b\}$$
+  for some matrix A and vector b.
+\end{definition}
+
+\begin{definition}[Polytope]
+  A set of points $P$ is a \textup{polytope} iff it is the convex hull of a
+  finite set $C = \{x_0, ..., x_m\}$, \textit{i.e}
+  $$C = \{\sum_{i<m} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \leqslant 0
+                                     \wedge \sum_{i<n} \lambda_i = 1\}$$
+\end{definition}
+
+\begin{corollary}[Decomposition Theorem for Polyhedra]
+  A set of point $P$ is a polyhedron iff there exists a polytope $C$ and a
+  finitely generated cone $C$ such that $P = Q + C$.
+\end{corollary}
+
+To illustrate this theorem, let us take the following problem:
+\begin{displaymath}
+  \left\{
+  \begin{array}{cccc}
+    3x & - & y  & \geqslant 0 \\
+    x  & + & y  & \geqslant 4 \\
+       &   & y  & \geqslant 1 \\
+    x  & - & 2y & \leqslant 2
+  \end{array}
+  \right.
+\end{displaymath}
+
+As we have seen, the set of the solutions of this problem is a polyhedron. In
+the figure \ref{decomposition} ...
+
+\begin{figure}[h]
+  \centering
+
+  \begin{tikzpicture}
+    \draw[style=help lines, thin] (0, 0) grid (7, 7);
+    \draw[thick, ->] (0, 0) -- (7, 0) node[anchor=west] {x};
+    \draw[thick, ->] (0, 0) -- (0, 7) node[anchor=south] {y};
+
+    \coordinate (A) at (2.333, 7);
+    \coordinate (B) at (1, 3);
+    \coordinate (C) at (3, 1);
+    \coordinate (D) at (4, 1);
+    \coordinate (E) at (7, 2.5);
+    \coordinate (B') at (7, 6);
+    \coordinate (D') at (6, 7);
+    \draw[thick] (A) -- (B);
+    \draw[thick] (B) -- (C);
+    \draw[thick] (C) -- (D);
+    \draw[thick] (D) -- (E);
+    \fill[fill=red, opacity=0.5] (B) -- (C) -- (D) -- cycle;
+    \fill[fill=blue, opacity=0.5] (A) -- (B) -- (D) -- (E) -- (7, 7) -- cycle;
+
+    \draw[very thick, ->] (B) -- (2, 6);
+    \draw[very thick, ->] (B) -- (3, 4);
+    \draw[very thick, ->] (D) -- (5, 4);
+    \draw[very thick, ->] (D) -- (6, 2);
+    \draw[dashed] (B) -- (B');
+    \draw[dashed] (D) -- (D');
+  \end{tikzpicture}
+
+  \label{decomposition}
+  \caption{}
+\end{figure}
 
 \bibliographystyle{plain}
 \bibliography{sources}
@@ -184,8 +482,6 @@ to the system:
 \end{displaymath}
 
 $\icheck$ may return the assignement $(x=1, y=2)$. Finally, the formula $\Phi$
-is satisfiable, and $(x=1, y=h) \vDash \Phi$.
-
-\section{Resolution of Mixed-Integer Linear Problems}
+is satisfiable, and $(x=1, y=2) \vDash \Phi$.
 
 \end{document}
