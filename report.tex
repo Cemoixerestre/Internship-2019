@@ -17,9 +17,11 @@
 \newcommand{\icheckpoint}{\mathtt{Checkpoint}()}
 \newcommand{\ibacktrack}[1]{\mathtt{Backtrack}(#1)}
 \newcommand{\csat}{\mathtt{Satisfiable}}
-\newcommand{\cunsat}{\mathtt{Unsatisfiable}}
+\newcommand{\cunsat}{\texttt{Unsatisfiable}}
 \newcommand{\cone}{\mathrm{cone}}
+\newcommand{\hull}{\mathrm{hull}}
 \newcommand{\ints}{\mathbb{Z}}
+\newcommand{\ifff}{if and only if}
 
 % Source: https://isabelle.in.tum.de/community/Generate_TeX_Snippets
 \newcommand{\DefineSnippet}[2]{%
@@ -40,13 +42,18 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{corollary}{Corollary}
 
-\title{Internship Report}
+\title{Internship Report -- Extending a Verified SMT Solver for Mixed-Integer
+Linear Arithmetic}
 \author{Alban Reynaud}
 \date{}
 
 \begin{document}
 
 \maketitle
+
+This work has been done in an internship in the Department of Computer Science
+of the University of Innsbruck, under the supervision of René Thiemann, in the
+Computer Logic team.
 
 \begin{abstract}
 \end{abstract}
@@ -62,9 +69,9 @@ proofs more readable. It also uses automatic provers.
 Moreover, there is the language \textit{Isar} that can is used to conduct proofs
 in a structured way.
 
-%TODO: give a section number for the book
 For example, here is a proof of the Cantor Theorem (the fact that there is no
-surjection from a set $A$ to its powerset), taken from \cite{ConcreteSemantics}
+surjection from a set $A$ to its powerset), taken from
+\cite[Section 5.1]{ConcreteSemantics}
 with Isabelle and Isar:
 \Snippet{cantor}
 
@@ -80,6 +87,11 @@ The outline of the proof is the following:
 \end{itemize}
 To prove each of these facts, the automatic provers $\mathtt{blast}$ and
 $\mathtt{auto}$ are used.
+
+It is also possible to define objects in the functional programming way in
+Isabelle/HOL and to export code. This way, it is possible to have a certified
+implementation of an algorithm by writing it in Isabelle/HOL, proving its
+correctness and exporting its code.
 
 \subsection{SMT Solving and Linear Arithmetic}
 \label{smt}
@@ -194,22 +206,24 @@ In this section, I will describe an algorithm to solve MILPs and the mathematics
 required to prove its correctness.
 
 \subsection{The Branch-and-Bound algorithm}
+\label{bbdescr}
 % TODO: give a reference?
 Branch-and-bound is a simple algorithm to solve ILPs and MILPs. Though it can be
 stated as an optimization algorithm, we will focus on its formulation for
 decision problems.
 
-Let $S$ be a set of linear constraints, and $I$ a set of variables. The
-principle of the algorithm is the following:
+Let $S$ and $I$ be respectively the set of linear constraints and the set of
+integral variables of our problem. The principle of the algorithm is the
+following:
 \begin{itemize}
-  \item Search a solution $v$ to the problem $S$. If no solution exists, return
-    $\cunsat$.
+  \item Search a valuation $v$ such that $v \vDash S$. If no solution exists,
+    return \cunsat{}.
   \item If for all $x_i \in I$, $v(i) \in \ints$, then $v \vDash_I S$.
     Return $v$.
   \item If there exists a variable $x_i \in I$ such that
     $v(x_i) \notin \ints$, we can remark that for all solution of this
-    MILP, either the constraint $x_i \leqslant \lfloor v(x_i) \rfloor$ is
-    satisfied, or  $x_i \geqslant \lceil v(x_i) \rceil$ is satisfied.
+    MILP, either the constraint $x_i \leqslant \lfloor v(x_i) \rfloor$ 
+    or the constraint $x_i \geqslant \lceil v(x_i) \rceil$ is satisfied.
     
     We can then try to split our initial problem into two subproblems (this is
     the \textit{branching step}):
@@ -221,7 +235,7 @@ principle of the algorithm is the following:
         $$S \cup \{x_i \geqslant \lceil v(x_i) \rceil\}$$ and $I$.
         If a solution $v'$ is found, return it.
     \end{itemize}
-  \item If after the branching step no solution is found, return $\cunsat$.
+  \item If after the branching step no solution is found, return \cunsat{}.
 \end{itemize}
 
 %\begin{algorithmic}[1]
@@ -229,7 +243,7 @@ principle of the algorithm is the following:
 %
 %  Search for a solution $v$ of $S$
 %  \If{no solution $v$ exists}
-%    \Return $\cunsat$
+%    \Return \cunsat{}
 %  \ElsIf {$\forall x_i \in I.~v(x_i) \in \ints$}
 %    \Return $v$
 %  \Else
@@ -252,8 +266,8 @@ let us examine the following ILP:
 
 This problem has no solution, and its relaxation (that is the problem composed
 by the linear inequalities, without the integrality constaints) is unbounded, as
-shown in figure \ref{bbloop}. If we try to run the branch-and-bound algorithm,
-here is what we could obtain:
+shown in figure \ref{bbloop}. Here is a possible execution of the
+branch-and-bound algorithm on this problem:
 \begin{itemize}
   \item Obtain the solution $(\frac{1}{3}, 0)$. The variable $x$ is not
     integral. Try to solve the problem with the extra constaint
@@ -330,16 +344,17 @@ $$A = (a_{ij})_{\substack{1 \leqslant i \leqslant n \\
 $b = (b_j)_{1 \leqslant j \leqslant p}$. We identify a valuation of $n$
 variables to a vector of dimension $n$.
 
-Now, we are going to give a proof that MILPs admits a solution if and only if
-they admit a solution of small size. In what follows, we will focus on ILPs, but
-the results can be easily extended to MILPs. Most of the definitions and
-results can be found in Schrijver's book \cite{Schrijver1998}.
+Now, we are going to give the outline of a proof that MILPs admits a solution
+if and only if they admit a solution of small size. In what follows, we will
+focus on ILPs, but the results can be easily extended to MILPs. Most of the
+definitions and results can be found in Schrijver's book
+\cite[Sections 7 and 16]{Schrijver1998}.
 
 \begin{definition}[Finitely Generated Cone]
   A set of points $C$ is a \textup{finitely generated cone}
-  iff $C = \cone~\{x_0, ..., x_{n-1}\}$ where
+  \ifff{} $C = \cone~\{x_0, ..., x_{n-1}\}$ where
   $$\cone~\{x_0, ..., x_{n-1}\} =
-      \left\{\sum_{i<n} \lambda_i x_i~|~
+      \left\{\sum_{i=0}^{i<n} \lambda_i x_i~|~
                \lambda_0, ..., \lambda_{n-1} \geqslant 0\right\}
   $$
   for some $x_0, ..., x_{n-1}$.
@@ -347,29 +362,33 @@ results can be found in Schrijver's book \cite{Schrijver1998}.
 
 \begin{definition}[Polyhedral Cone]
   A set of points $C$ is a \textup{polyhedral cone}
-  iff $C = \{x~|~Ax \leqslant 0\}$ for some matrix $A$.
+  \ifff{} $C = \{x~|~Ax \leqslant 0\}$ for some matrix $A$.
 \end{definition}
 
 \begin{theorem}[Farkas-Minkowsky-Weyl Theorem]
-  A set $C$ is a finitely generated cone iff is is a polyhedral cone.
+  A set $C$ is a finitely generated cone \ifff{} it is a polyhedral cone.
 \end{theorem}
 
 \begin{definition}[Polyhedron]
-  A set of points $P$ is a \textup{convex polyhedron} iff
+  A set of points $P$ is a \textup{convex polyhedron} \ifff{}
   $$P = \{x~|~Ax \leqslant b\}$$
   for some matrix A and vector b.
 \end{definition}
 
+Note that a polyhedron could be interpreted as the set of solutions of a linear
+problem with only large inequalities.
+
 \begin{definition}[Polytope]
-  A set of points $P$ is a \textup{polytope} iff it is the convex hull of a
+  A set of points $P$ is a \textup{polytope} \ifff{} it is the convex hull of a
   finite set $C = \{x_0, ..., x_{m-1}\}$, \textit{i.e}
-  $$C = \left\{
-          \sum_{i<m} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \geqslant 0
-                                     \wedge \sum_{i<m} \lambda_i = 1\right\}$$
+  $$P = \left\{
+    \sum_{i=0}^{i<m} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \geqslant 0
+                                  \wedge \sum_{i=0}^{i<m} \lambda_i = 1
+        \right\}$$
 \end{definition}
 
 \begin{corollary}[Decomposition Theorem for Polyhedra]
-  A set of points $P$ is a polyhedron iff there exists a polytope $C$ and a
+  A set of points $P$ is a polyhedron \ifff{} there exists a polytope $Q$ and a
   finitely generated cone $C$ such that $P = Q + C$.
 \end{corollary}
 
@@ -428,15 +447,15 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
 \end{figure}
 
 \begin{corollary}
-  $P$ is a polytope iff $P$ is a bounded polyhedron.
+  $P$ is a polytope \ifff{} $P$ is a bounded polyhedron.
 \end{corollary}
 
 \begin{definition}[Integer Hull]
   Given a polyhedron $P$, the \textup{integer hull} $P_I$ is the convex hull of
-  the integral vectors of $P$, i.e $P_I = Hull (P \cap \ints^n\}$.
+  the integral vectors of $P$, i.e $P_I = \hull (P \cap \ints^n\}$.
 \end{definition}
 
-\begin{theorem}
+\begin{theorem}[Meyer (1974)]
   For any rational polyhedron $P$, $P_I$ is a polyhedron. Moreover, if
   $P = Q + C$ with $Q$ a polytope and $C$ a cone, the there exists a polytope
   $Q'$ such that $P_I = Q' + C$.
@@ -444,12 +463,11 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
 \begin{proof}
   Let us decompose $P$ into $P = Q + C$ where
   $C = \cone~\{y_0, ..., y_{s-1}\}$. All the $y_i$'s are rational vectors.
-  Note that if we multiply them by positive constants, the cone is unchanged.
-  This why, without loss of generality, we can assume that the $y_i$'s are
-  integral.
+  Without loss of generality we can assume that the $y_i$'s are integral.
 
   Let us define
-  $$B = \left\{\sum_{i < s} \mu_i y_i~|~0 \leqslant \mu_i \leqslant 1\right\}$$
+  $$B = \left\{\sum_{i=0}^{i<s} \mu_i y_i~|~
+               0 \leqslant \mu_i \leqslant 1\right\}$$
   and show that $$P = (Q + B)_I + C$$
 
   The easy inclusion is the following:
@@ -459,10 +477,10 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
   There exists $q \in Q$ and $\lambda_0, ..., \lambda_{s-1}
   \leqslant 0$ such that: $$x = q + \sum_{i < s} \lambda_i y_i$$ But for every
   $i$, $\lfloor \lambda_i \rfloor y_i$ is an integral vector, so
-  $$x - \sum_{i<n} \lfloor \lambda_i \rfloor y_i=
-      q + \sum_{i<n} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$$
+  $$x - \sum_{i=0}^{i<n} \lfloor \lambda_i \rfloor y_i=
+      q + \sum_{i=0}^{i<n} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$$
   is integral, and as $\sum_{i<n} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$
-  is contained in $B$:
+  is contained in $B$, so:
   $$x - \sum_{i<n} \lfloor \lambda_i \rfloor y_i \in (Q + B)_I$$
   Finally: $x \in (Q + B)_I + C$
 
@@ -476,6 +494,7 @@ A graphical representation of this proof is given in figure
 in red, $(Q + B)_I$ is represented in green. As we can see, $(Q + B)_I + C$ (the
 green and yellow areas) is exactly the integer hull of the polyhedron.
 
+%FIXME: the boundary of (Q + B) (and therefore the area (Q + B)_I) in wrong.
 \begin{figure}[h]
   \label{integer_hull_decomp}
   \centering
@@ -545,7 +564,7 @@ Moreover, we can assume that the vectors $\{y_0, ..., y_{s-1}\}$ are linearly
 independant using the fundamental theorem of linear inequalities, which implies
 that $s \leqslant n$.
 
-Finally, if $Q = Hull~\{x_0, ..., x_{k-1}\}$, then for every
+Finally, if $Q = \hull~\{x_0, ..., x_{k-1}\}$, then for every
 $z \in Q + B$, $z \in [-B, B]^n$ where
 $$B = \max_{ij} |x_{ij}| + n \cdot \max_{i, j} |y_{ij}|$$
 
@@ -557,18 +576,18 @@ We will use the notation
 $\llbracket a, b \rrbracket$ for the set of integers in the interval $[a, b]$.
 
 \begin{theorem}[Generalized Farkas-Minkowsky-Weyl Theorem]
-  A set $C$ is a finitely generated cone iff is is a polyhedral cone.
+  A set $C$ is a finitely generated cone \ifff{} is is a polyhedral cone.
 
   Moreover, if $C = \{x~|~Ax \leqslant 0\}$ and
-  $A \in \llbracket -m, m \rrbracket^{p \times n}$ with $m \leqslant 1$,
+  $A \in \llbracket -m, m \rrbracket^{p \times n}$ with $m \geqslant 1$,
   there exists a finite set $Y$ such that
   $Y \subseteq \llbracket -B, B \rrbracket^n$
   and $$C = \cone~Y$$ where
-  $$B = (n - 1)! \cdot m^n$$
+  $$B = (n - 1)! \cdot m^{n-1}$$
 \end{theorem}
 
 \begin{corollary}[Generalized Decomposition Theorem]
-  A set of points $P$ is a polyhedron iff there exists a polytope $C$ and a
+  A set of points $P$ is a polyhedron \ifff{} there exists a polytope $Q$ and a
   finitely generated cone $C$ such that $P = Q + C$.
 
   Moreover, if $P = \{x~|~Ax \leqslant b\}$ with
@@ -576,7 +595,7 @@ $\llbracket a, b \rrbracket$ for the set of integers in the interval $[a, b]$.
   $b \in \llbracket -m, m \rrbracket^p$, and $m \geqslant 1$,
   then there exists finite sets
   $Q \subseteq [-B, B]$ and $X \subseteq \llbracket -B, B \rrbracket$ such that
-  $$P = hull~Q + \cone~X$$ with $$B = n! \cdot m^n$$
+  $$P = \hull~Q + \cone~X$$ with $$B = n! \cdot m^n$$
 \end{corollary}
 
 We finally have the desired result:
@@ -611,39 +630,127 @@ $\llbracket 1, n \rrbracket$:
 
 \section{Formalization in Isabelle}
 %TODO: Find a better introduction
-As we have presented a method to solve MILPs, we can focus on the main work that
-has been done during this internship: the formalization of the previous theorems
-and the implementation of an MILP solver.
+As we have presented a method to solve MILPs, we can focus of their
+formalization, which has been the main part of the work during this internship.
+It consisted first in the formalization of Schrijvers results concerning linear
+inequalities (section \ref{forlineq}), then in the implementation and the proof
+of correction of a branch-and-bound algorithm (section \ref{forbb}).
 
 %TODO: Find a better section name
 \subsection{Formalization of Results concerning Linear Inequalities}
-The first part of the work consisted in formalizing the results from Schijver's
-book, following the description given in the subsection \ref{schrijverbnd}.
-Also, other results including the Farkas' Lemma or the Carathéodory's theorem
-were formalized.
-
-% 5551 lines of code
-The work was published in AFP \cite{Linear_Inequalities-AFP}.
+\label{forlineq}
+This part concerns the formalization of the results from Schijver's book
+described in section \ref{schrijverbnd}.
+Also, other results including the Farkas' lemma or the Carathéodory's theorem
+have been formalized.
 
 This was done in collaboration with René Thiemann and Ralph Bottesch:
-% TODO: complete
+\textit{TODO: complete}
 \begin{itemize}
-  \item René developped results about integral and bounded vectors or matrices.
+  \item René developped results about integral and bounded vectors or matrices
+    and ...
   \item Ralph focused on the demonstration of the fundamental theorem of linear
-    inequalities and...
+    inequalities and ...
   \item I mainly focused on the demonstration of the Farkas-Minkowsky-Weyl and
     the decomposition theorem.
 \end{itemize}
 
+In total, 5551 lines of proofs were written. The work was published in the
+\textit{Archive for Formal Proofs}, a collection of proof libraries in Isabelle.
+\cite{Linear_Inequalities-AFP}.
+
+\textit{Shoud I talk about the extra work mainly done by René, such as the
+preparation for the AFP submission?}
+
+The formalization follows the outline given in section \ref{schrijverbnd}. For
+example, several theorems have particular formulations including bounds:
+\Snippet{farkas-minkowsky-2}
+and a more general formulation:
+\Snippet{farkas-minkowsky}
+
+Where the following Isabelle notations are used:
+\begin{itemize}
+  \item $\mathtt{carrier\_vec}~n$ is the set of vectors $\mathbb{K}^n$
+    where $\mathbb{K}$ is a field.
+  \item $\mathtt{carrier\_mat}~nr~nc$ is the set of matrices
+    $\mathbb{K}^{nr \times nc}$.
+  \item $\mathbb{Z}_v$ is the set of integral vectors.
+  \item $\mathbb{Z}_m$ is the set of integral matrices.
+  \item $\mathtt{Bounded\_vec}~B$ is the set of vectors with coefficients in the
+    interval $[-B, B]$.
+  \item $\mathtt{Bounded\_mat}~B$ is the set of matrices with coefficients in
+    the interval $[-B, B]$.
+  \item $\mathtt{det\_bound}~n~m$ is $n! \cdot m^n$.
+\end{itemize}
+
+A difficulty I was confronted to is the different definitions of linear
+combinations in Isabelle. Indeed, the standard definition is
+$$\mathtt{lincomb}~c~V = \sum_{v \in V} c(v) \cdot v$$
+where $V$ is a set of vectors and $c$ is a map from vectors to scalars.
+
+A problem that can occur is the distributivity when we multiply this sum by
+a matrix. Indeed, it is clear that
+$$A \sum_i \lambda_i x_i = \sum_i \lambda_i \cdot A x_i$$. But this equality
+cannotbe simply stated with the operator $\mathtt{lincomb}$. Indeed, it is
+possible that there exists two vectors $x_0$ and $x_1$ such that
+$A x_0 = A x_1$. If we want to express $\sum_i \lambda_i \cdot A x_i$ using
+$\mathtt{lincomb}$, then the scalar coefficient associated to $A x_0$ is
+neither $c(x_0)$ nor $c(x_1)$ but something like $\sum_{x . A x = A x_0} c(v)$,
+which is more complicated to work with. More generally, this problem occurs
+everytime we want to state the equality
+$$f(\sum_i \lambda_i x_i) = \sum_i \lambda_i f(x_i)$$ where $f$ is a linear map.
+
+To solution to tackle this problem is to use linear combinations over lists
+with the following operation:
+$$\mathtt{lincomb\_list}~c~V_s = \sum_{i = 0}^{i < l} c(i) \cdot v_i$$
+where $V_s = [v_0, ..., v_{l-1}]$ is a list of vectors and $c$ is a function
+mapping integers to scalars. 
+
+% TODO: with the previous paragraphs, I give the impression that there are only
+% advantages of using lincomb_list. It makes me confused.
+This way, the distributivity of a linear map to a linear combination can be
+expressed in a direct manner. To use the advantages of both definitions, we
+usually define our concepts in two manners: one using sets and the other using
+lists. For example, here is how non-negative linear combinations are defined,
+for sets and for lists:
+
 \Snippet{nonneg-lincomb}
 \Snippet{nonneg-lincomb-list}
-\Snippet{finite-cone}
-\Snippet{cone}
-\Snippet{cone-list}
-\Snippet{finite-cone-iff-cone-list}
-\Snippet{farkas-minkowsky-1}
-\Snippet{farkas-minkowsky-2}
-\Snippet{farkas-minkowsky}
+
+where $\mathtt{c}~`~\mathtt{Vs} = \{\mathtt{c}(x)~|~x \in \mathtt{Vs}\}$
+is the image of the set $\mathtt{Vs}$ under $\mathtt{c}$.
+We can then use this definition to define convex combinations:
+
+\Snippet{convex-lincomb}
+\Snippet{convex-lincomb-list}
+
+and then define convex hulls:
+
+\Snippet{convex-hull}
+\Snippet{convex-hull-list}
+
+Finally, we have to show that these two definitions are equivalent:
+
+\Snippet{convex-hull-equivalence}
+%\Snippet{finite-cone}
+%\Snippet{cone}
+%\Snippet{cone-list}
+%\Snippet{finite-cone-iff-cone-list}
+%\Snippet{farkas-minkowsky-1}
+
+\subsection{Formalization of a Branch-and-Bound Algorithm}
+\label{forbb}
+
+The next part is the formalization of a branch-and-bound algorithm, as described
+in the section \ref{bbdescr}. The idea was to state and prove the correctness of
+a simple algorithm, without any optimization for the moment.
+
+I first developped a function $\mathtt{branch\_and\_bound\_core}$ that takes
+four arguments:
+
+\section{Future Work}
+
+\section*{Conclusion}
 
 \bibliographystyle{plain}
 \bibliography{sources}
@@ -715,5 +822,8 @@ to the system:
 
 $\icheck$ may return the assignement $(x=1, y=2)$. Finally, the formula $\Phi$
 is satisfiable, and $(x=1, y=2) \vDash \Phi$.
+
+\section{Code of the Core of the Branch-and-Bound procedure}
+\label{bbcode}
 
 \end{document}
