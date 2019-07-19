@@ -16,7 +16,7 @@
 \newcommand{\icheck}{\mathtt{Check}()}
 \newcommand{\icheckpoint}{\mathtt{Checkpoint}()}
 \newcommand{\ibacktrack}[1]{\mathtt{Backtrack}(#1)}
-\newcommand{\csat}{\mathtt{Satisfiable}}
+%\newcommand{\csat}{\mathtt{Satisfiable}}
 \newcommand{\cunsat}{\texttt{Unsatisfiable}}
 \newcommand{\cone}{\mathrm{cone}}
 \newcommand{\hull}{\mathrm{hull}}
@@ -35,8 +35,9 @@
   \ifcsname snippet--#1\endcsname{\csname snippet--#1\endcsname}%
   \else+++++++ERROR: Snippet ``#1 not defined+++++++ \fi}
 
-\input{../test-cantor-theorem/generated/snippets}
-\input{../linear-inequalities-in-isabelle/generated/snippets}
+\input{cantor-snippets}
+\input{linear-snippets}
+\input{mixed-snippets}
 
 \newtheorem{definition}{Definition}
 \newtheorem{theorem}{Theorem}
@@ -54,6 +55,8 @@ Linear Arithmetic}
 This work has been done in an internship in the Department of Computer Science
 of the University of Innsbruck, under the supervision of René Thiemann, in the
 Computer Logic team.
+
+\tableofcontents
 
 \begin{abstract}
 \end{abstract}
@@ -93,6 +96,9 @@ Isabelle/HOL and to export code. This way, it is possible to have a certified
 implementation of an algorithm by writing it in Isabelle/HOL, proving its
 correctness and exporting its code.
 
+% TODO: re-organize the next subsections this way:
+% - a subsection about linear and integral linear arithmetic
+% - a subsection about SMT-solving and incremental interface
 \subsection{SMT Solving and Linear Arithmetic}
 \label{smt}
 Let $T$ be a quantifier-free theory. A $T$-solver is an algorithm to check if a
@@ -140,16 +146,17 @@ Let $\Phi$ be a boolean formula of atoms of the theory $T$. We may want to find
 an assignement $v$ that satisfies $\Phi$, or to know if no such assignement
 exists. This problem is called \textbf{Satisfiability Modulo Theory} (SMT).
 
+% TODO: give a simpler example, and move completely this into the appendix
 For example, a SMT instance based on linear arithmetic would be:
 $$\Phi \equiv (A \vee B \vee C) \wedge (\neg A \vee B) \wedge
               (\neg A \vee C \vee D) \wedge (\neg C \vee D)$$
 with
 \begin{displaymath}
 \begin{array}{lclccc}
-  A & \equiv &x  & + & y & \geqslant 3 \\
-  B & \equiv &x  &   &   & \leqslant 1 \\
+  A & \equiv & x & + & y & \geqslant 3 \\
+  B & \equiv & x &   &   & \leqslant 1 \\
   C & \equiv &   &   & y & \leqslant 1 \\
-  D & \equiv &y  & - & x & < 2         \\
+  D & \equiv & y & - & x & < 2         \\
 \end{array}
 \end{displaymath}
 
@@ -158,7 +165,8 @@ basics of their resolution.
 
 \subsection{Incremental Interface for SMT solvers}
 %TODO: give a chapter number for the book
-An efficient procedure to solve SMT problems is DPLL($T$) \cite{Decision2016},
+An efficient procedure to solve SMT problems is DPLL($T$)
+\cite[Section 3.2]{Decision2016},
 which works as a combination of a SAT-solver and a $T$-solver. Here is a quick
 description of such an algorithm:
 \begin{itemize}
@@ -333,7 +341,7 @@ inequalities, it could be put in the form:
   \begin{array}{cccccl}
     a_{11} x_1 & + & ...    & + & a_{1n} x_n & \leqslant b_1 \\
                &   & \vdots &   &            &               \\
-    a_{p1} x_0 & + & ...    & + & a_{pn} x_n & \leqslant b_p \\
+    a_{p1} x_1 & + & ...    & + & a_{pn} x_n & \leqslant b_p \\
   \end{array}
   \right.
 \end{displaymath}
@@ -385,6 +393,8 @@ problem with only large inequalities.
     \sum_{i=0}^{i<m} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \geqslant 0
                                   \wedge \sum_{i=0}^{i<m} \lambda_i = 1
         \right\}$$
+
+  We will also use the following notation: $P = \hull~C$.
 \end{definition}
 
 \begin{corollary}[Decomposition Theorem for Polyhedra]
@@ -566,7 +576,7 @@ that $s \leqslant n$.
 
 Finally, if $Q = \hull~\{x_0, ..., x_{k-1}\}$, then for every
 $z \in Q + B$, $z \in [-B, B]^n$ where
-$$B = \max_{ij} |x_{ij}| + n \cdot \max_{i, j} |y_{ij}|$$
+$$B = \max_{i, j} |x_{ij}| + n \cdot \max_{i, j} |y_{ij}|$$
 
 
 With this remark, what remains to do is to find a bound $B$ that depends on the
@@ -600,7 +610,8 @@ $\llbracket a, b \rrbracket$ for the set of integers in the interval $[a, b]$.
 
 We finally have the desired result:
 
-\begin{corollary}
+\begin{corollary}[Existence of small solutions for ILPs]
+  \label{small-ilp}
   If $P = \{x~|~Ax \leqslant b\}$ with
   $A \in \llbracket -m, m \rrbracket^{p \times n}$,
   $b \in \llbracket -m, m \rrbracket^p$ and $m \geqslant 1$, then
@@ -610,11 +621,12 @@ We finally have the desired result:
 \end{corollary}
 
 With the same ouline of proof, we can obtain a more general result that
-encompasses MILPs and strict inequalities. If $I$ is a subset of
-$\llbracket 1, n \rrbracket$:
+encompasses MILPs and strict inequalities. 
 
-\begin{theorem}
-  If $P = \{x~|~Ax \leqslant b \cap A'x < b'\}$ with
+\begin{theorem}[Existence of small solutions for MILPs]
+  \label{small-milp}
+  If $I$ is a subset of $\llbracket 1, n \rrbracket$ and
+  $$P = \{x~|~Ax \leqslant b \cap A'x < b'\}$$ with
   $A \in \llbracket -m, m \rrbracket^{p \times n}$,
   $b \in \llbracket -m, m \rrbracket^p$,
   $A' \in \llbracket -m, m \rrbracket^{p' \times n}$,
@@ -691,7 +703,7 @@ where $V$ is a set of vectors and $c$ is a map from vectors to scalars.
 A problem that can occur is the distributivity when we multiply this sum by
 a matrix. Indeed, it is clear that
 $$A \sum_i \lambda_i x_i = \sum_i \lambda_i \cdot A x_i$$. But this equality
-cannotbe simply stated with the operator $\mathtt{lincomb}$. Indeed, it is
+cannot be simply stated with the operator $\mathtt{lincomb}$ Indeed, it is
 possible that there exists two vectors $x_0$ and $x_1$ such that
 $A x_0 = A x_1$. If we want to express $\sum_i \lambda_i \cdot A x_i$ using
 $\mathtt{lincomb}$, then the scalar coefficient associated to $A x_0$ is
@@ -700,8 +712,8 @@ which is more complicated to work with. More generally, this problem occurs
 everytime we want to state the equality
 $$f(\sum_i \lambda_i x_i) = \sum_i \lambda_i f(x_i)$$ where $f$ is a linear map.
 
-To solution to tackle this problem is to use linear combinations over lists
-with the following operation:
+A solution to tackle this problem is to use linear combinations over lists,
+defined this way:
 $$\mathtt{lincomb\_list}~c~V_s = \sum_{i = 0}^{i < l} c(i) \cdot v_i$$
 where $V_s = [v_0, ..., v_{l-1}]$ is a list of vectors and $c$ is a function
 mapping integers to scalars. 
@@ -745,12 +757,92 @@ The next part is the formalization of a branch-and-bound algorithm, as described
 in the section \ref{bbdescr}. The idea was to state and prove the correctness of
 a simple algorithm, without any optimization for the moment.
 
+%TODO: talk about \vDash_cs and \vDash_mcs
 I first developped a function $\mathtt{branch\_and\_bound\_core}$ that takes
 four arguments:
+\begin{itemize}
+  \item A list of linear constraints \texttt{cs}.
+  \item A list of variables supposed to be integral \texttt{Is}.
+  \item A function \texttt{lb} mapping variables in \texttt{Is} to a lower
+    bound.
+  \item A function \texttt{ub} mapping variables in \texttt{Is} to an upper
+    bound.
+\end{itemize}
+The code of this function can be found in appendix \ref{bbcode}
+
+The idea of the arguments \texttt{lb} and \texttt{ub} are to bound the problem.
+This way, I can prove that this function always terminates. To do so, a
+convenient way in Isabelle is to use a \textit{measure}. It is function mapping
+the arguments of the function \texttt{f} that we want to prove its termination
+to natural numbers. If we prove that at each recursive call the measure strictly
+decreases, then there is no way that a infinite sequence of recursive calls can
+happen and the function always terminates. The measure I used is the following:
+$$\max\left(
+       0,
+       \sum_{x_i \in \mathtt{Is}} (\mathtt{ub}(x_i) - \mathtt{lb}(x_i))
+       \right)$$
+% Should I give more details about the termination prove or is it enough?
+
+Once the termination proved, I proved correctness properties, the first is that
+if a valuation is found it satisfies the MILP:
+\Snippet{bbcore-sat}
+and the other is that if no valuation is found, then there is no valuation
+\texttt{v} that satisfies the MILP and such that the valuations of the integral
+variables are bounded by \texttt{lb} and \texttt{ub}:
+\Snippet{bbcore-unsat}
+where the Isabelle notation $v \vDash_{mcs} (S, I)$ is equivalent to notation
+$v \vDash_I S$.
+
+The goal now is to used the theorem \ref{small-milp} to have a formalized
+complete solver for MILPs. The problem is that linear constraints are coded with
+a datastructure called \textit{linear polynomials} that should be converted to
+the form of vectors and matrices to use the theorem.
+
+To do so, linear constraints are converted to the type \texttt{Le\_Constraint}
+that is more practical to use, as the description of different inequalities uses
+a sum-type with only two constructors instead of ten for the type
+\texttt{constraint}. Indeed, I first tried to express the conversion using
+directly the standard type, and when I switched to \texttt{Le\_Constraint}'s, I
+considerably simplified the proofs (around 80 lines of proof were saved).
+The conversion theorem is the following:
+\Snippet{mats-vecs-of-constraints}
+
+After some work around converting rational constraints to integral constraints,
+I could define a function \texttt{compute\_bound} that maps a list of
+constraints to the desired bound and prove that:
+\Snippet{compute-bound}
+
+Finally, I was able to state a complete MILP-solver based on the
+branch-and-bound algorithm:
+\Snippet{branch-and-bound}
+
+and to prove its correction:
+\Snippet{branch-and-bound-sat}
+\Snippet{branch-and-bound-unsat}
+
 
 \section{Future Work}
+Even if I have written and proved the correctness of a branch-and-bound
+algorithm, the work is not yet finished. Indeed, some tasks are needed before
+having a more effective formalized MILP-solver with an incremental interface.
+Here is the outline of what should be done after my internship to complete the
+work.
+
+\subsection{Using the incremental solver}
+
+\subsection{Gomory Cuts}
+
+\subsection{Finalization}
 
 \section*{Conclusion}
+During this internship, I contributed to formalize in Isabelle results about
+linear inequalities with René Thiemann and Ralph Bottesch. I used these results
+to prove the termination of a branch-and-bound algorithm to solve MILPs. I also
+proved the correctness of this algorithm.
+
+This is the first step to extending a linear arithmetic solver to mixed-integer
+linear arithmetic, with an incremental interface so that it could be plugged in
+a SMT-solver.
 
 \bibliographystyle{plain}
 \bibliography{sources}
@@ -825,5 +917,23 @@ is satisfiable, and $(x=1, y=2) \vDash \Phi$.
 
 \section{Code of the Core of the Branch-and-Bound procedure}
 \label{bbcode}
+
+\Snippet{bbcore}
+To understand the code:
+\begin{itemize}
+  \item \texttt{bounds\_to\_constraints Is lb ub} returns a list containing the
+    constraints $x_i \geqslant \mathtt{lb}~x_i$ and
+    $x_i \leqslant \mathtt{lb}~x_i$ for all element $x_i$ of the list
+    \texttt{Is}.
+  \item The function \texttt{simplex} takes as arguments a list of
+    constraints and returns \texttt{Unsat} if there is no rational solution to
+    this combination of constraints, or \texttt{Sat v} such that
+    $\langle \mathtt{v} \rangle$ is a rational valuation satisfying these
+    constraints.
+  \item The function \texttt{find} takes as arguments a predicate \texttt{f}
+    and a list \texttt{Is} and returns either $\mathtt{Some}~x_i$ where $x_i$ is
+    an element of \texttt{Is} such that $\mathtt{f}~x_i$ is true, or
+    \texttt{None} if no such element exists.
+\end{itemize}
 
 \end{document}

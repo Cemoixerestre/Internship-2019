@@ -1,0 +1,29 @@
+\DefineSnippet{cantor}{
+\isacommand{lemma}\isamarkupfalse%
+\ {\isachardoublequoteopen}{\isasymnot}\ surj\ {\isacharparenleft}f\ {\isacharcolon}{\isacharcolon}\ {\isacharprime}a\ {\isasymRightarrow}\ {\isacharprime}a\ set{\isacharparenright}{\isachardoublequoteclose}\isanewline
+%
+\isadelimproof
+%
+\endisadelimproof
+%
+\isatagproof
+\isacommand{proof}\isamarkupfalse%
+\isanewline
+\ \ \isacommand{assume}\isamarkupfalse%
+\ {\isachardoublequoteopen}surj\ f{\isachardoublequoteclose}\isanewline
+\ \ \isacommand{hence}\isamarkupfalse%
+\ {\isachardoublequoteopen}{\isasymexists}\ a{\isachardot}\ {\isacharbraceleft}x{\isachardot}\ x\ {\isasymnotin}\ f\ x{\isacharbraceright}\ {\isacharequal}\ f\ a{\isachardoublequoteclose}\ \isacommand{by}\isamarkupfalse%
+\ blast\isanewline
+\ \ \isacommand{thus}\isamarkupfalse%
+\ False\ \isacommand{by}\isamarkupfalse%
+\ auto\isanewline
+\isacommand{qed}\isamarkupfalse%
+%
+\endisatagproof
+{\isafoldproof}%
+%
+\isadelimproof
+%
+\endisadelimproof
+%
+}%EndSnippet

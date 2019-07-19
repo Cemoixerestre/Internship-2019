@@ -1,0 +1,81 @@
+\DefineSnippet{nonneg-lincomb}{
+\isacommand{definition}\isamarkupfalse%
+\ {\isachardoublequoteopen}nonneg{\isacharunderscore}lincomb\ c\ Vs\ b\ {\isacharequal}\isanewline
+\ \ {\isacharparenleft}lincomb\ c\ Vs\ {\isacharequal}\ b\ {\isasymand}\ c\ {\isacharbackquote}\ Vs\ {\isasymsubseteq}\ {\isacharbraceleft}x{\isachardot}\ x\ {\isasymge}\ {\isadigit{0}}{\isacharbraceright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{nonneg-lincomb-list}{
+\isacommand{definition}\isamarkupfalse%
+\ {\isachardoublequoteopen}nonneg{\isacharunderscore}lincomb{\isacharunderscore}list\ c\ Vs\ b\ {\isacharequal}\isanewline
+\ \ {\isacharparenleft}lincomb{\isacharunderscore}list\ c\ Vs\ {\isacharequal}\ b\ {\isasymand}\ {\isacharparenleft}{\isasymforall}\ i\ {\isacharless}\ length\ Vs{\isachardot}\ c\ i\ {\isasymge}\ {\isadigit{0}}{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{finite-cone}{
+\isacommand{definition}\isamarkupfalse%
+\ finite{\isacharunderscore}cone\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharprime}a\ vec\ set\ {\isasymRightarrow}\ {\isacharprime}a\ vec\ set{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
+\ \ {\isachardoublequoteopen}finite{\isacharunderscore}cone\ Vs\ {\isacharequal}\ {\isacharparenleft}{\isacharbraceleft}\ b{\isachardot}\ {\isasymexists}\ c{\isachardot}\ nonneg{\isacharunderscore}lincomb\ c\ {\isacharparenleft}if\ finite\ Vs\ then\ Vs\ else\ {\isacharbraceleft}{\isacharbraceright}{\isacharparenright}\ b{\isacharbraceright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{cone}{
+\isacommand{definition}\isamarkupfalse%
+\ cone\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharprime}a\ vec\ set\ {\isasymRightarrow}\ {\isacharprime}a\ vec\ set{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
+\ \ {\isachardoublequoteopen}cone\ Vs\ {\isacharequal}\ {\isacharparenleft}{\isacharbraceleft}\ x{\isachardot}\ {\isasymexists}\ Ws{\isachardot}\ finite\ Ws\ {\isasymand}\ Ws\ {\isasymsubseteq}\ Vs\ {\isasymand}\ x\ {\isasymin}\ finite{\isacharunderscore}cone\ Ws{\isacharbraceright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{cone-list}{
+\isacommand{definition}\isamarkupfalse%
+\ cone{\isacharunderscore}list\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}{\isacharprime}a\ vec\ list\ {\isasymRightarrow}\ {\isacharprime}a\ vec\ set{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
+\ \ {\isachardoublequoteopen}cone{\isacharunderscore}list\ Vs\ {\isacharequal}\ {\isacharbraceleft}b{\isachardot}\ {\isasymexists}c{\isachardot}\ nonneg{\isacharunderscore}lincomb{\isacharunderscore}list\ c\ Vs\ b{\isacharbraceright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{finite-cone-iff-cone-list}{
+\isacommand{lemma}\isamarkupfalse%
+\ finite{\isacharunderscore}cone{\isacharunderscore}iff{\isacharunderscore}cone{\isacharunderscore}list{\isacharcolon}\ \isakeyword{assumes}\ Vs{\isacharcolon}\ {\isachardoublequoteopen}Vs\ {\isasymsubseteq}\ carrier{\isacharunderscore}vec\ n{\isachardoublequoteclose}\isanewline
+\ \ \isakeyword{and}\ id{\isacharcolon}\ {\isachardoublequoteopen}Vs\ {\isacharequal}\ set\ Vsl{\isachardoublequoteclose}\isanewline
+\isakeyword{shows}\ {\isachardoublequoteopen}finite{\isacharunderscore}cone\ Vs\ {\isacharequal}\ cone{\isacharunderscore}list\ Vsl{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{convex-lincomb}{
+\isacommand{definition}\isamarkupfalse%
+\ {\isachardoublequoteopen}convex{\isacharunderscore}lincomb\ c\ Vs\ b\ {\isacharequal}\isanewline
+\ \ {\isacharparenleft}nonneg{\isacharunderscore}lincomb\ c\ Vs\ b\ {\isasymand}\ sum\ c\ Vs\ {\isacharequal}\ {\isadigit{1}}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{convex-lincomb-list}{
+\isacommand{definition}\isamarkupfalse%
+\ {\isachardoublequoteopen}convex{\isacharunderscore}lincomb{\isacharunderscore}list\ c\ Vs\ b\ {\isacharequal}\isanewline
+\ \ {\isacharparenleft}nonneg{\isacharunderscore}lincomb{\isacharunderscore}list\ c\ Vs\ b\ {\isasymand}\ sum\ c\ {\isacharbraceleft}{\isadigit{0}}{\isachardot}{\isachardot}{\isacharless}length\ Vs{\isacharbraceright}\ {\isacharequal}\ {\isadigit{1}}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{convex-hull}{
+\isacommand{definition}\isamarkupfalse%
+\ {\isachardoublequoteopen}convex{\isacharunderscore}hull\ Vs\ {\isacharequal}\isanewline
+\ \ {\isacharbraceleft}x{\isachardot}\ {\isasymexists}\ Ws\ c{\isachardot}\ finite\ Ws\ {\isasymand}\ Ws\ {\isasymsubseteq}\ Vs\ {\isasymand}\ convex{\isacharunderscore}lincomb\ c\ Ws\ x{\isacharbraceright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{convex-hull-list}{
+\isacommand{definition}\isamarkupfalse%
+\ {\isachardoublequoteopen}convex{\isacharunderscore}hull{\isacharunderscore}list\ Vs\ {\isacharequal}\isanewline
+\ \ {\isacharbraceleft}x{\isachardot}\ {\isasymexists}\ c{\isachardot}\ convex{\isacharunderscore}lincomb{\isacharunderscore}list\ c\ Vs\ x{\isacharbraceright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{convex-hull-equivalence}{
+\isacommand{lemma}\isamarkupfalse%
+\ finite{\isacharunderscore}convex{\isacharunderscore}hull{\isacharunderscore}iff{\isacharunderscore}convex{\isacharunderscore}hull{\isacharunderscore}list{\isacharcolon}\isanewline
+\ \ \isakeyword{assumes}\ Vs{\isacharcolon}\ {\isachardoublequoteopen}Vs\ {\isasymsubseteq}\ carrier{\isacharunderscore}vec\ n{\isachardoublequoteclose}\isanewline
+\ \ \isakeyword{and}\ id{\isacharprime}{\isacharcolon}\ {\isachardoublequoteopen}Vs\ {\isacharequal}\ set\ Vsl{\isacharprime}{\isachardoublequoteclose}\isanewline
+\isakeyword{shows}\ {\isachardoublequoteopen}convex{\isacharunderscore}hull\ Vs\ {\isacharequal}\ convex{\isacharunderscore}hull{\isacharunderscore}list\ Vsl{\isacharprime}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{farkas-minkowsky-1}{
+\isacommand{lemma}\isamarkupfalse%
+\ farkas{\isacharunderscore}minkowsky{\isacharunderscore}weyl{\isacharunderscore}theorem{\isacharunderscore}{\isadigit{1}}{\isacharcolon}\isanewline
+\ \ \isakeyword{assumes}\ X{\isacharcolon}\ {\isachardoublequoteopen}X\ {\isasymsubseteq}\ carrier{\isacharunderscore}vec\ n{\isachardoublequoteclose}\isanewline
+\ \ \ \ \isakeyword{and}\ finX{\isacharcolon}\ {\isachardoublequoteopen}finite\ X{\isachardoublequoteclose}\isanewline
+\ \ \isakeyword{shows}\ {\isachardoublequoteopen}{\isasymexists}\ nr\ A{\isachardot}\ A\ {\isasymin}\ carrier{\isacharunderscore}mat\ nr\ n\ {\isasymand}\ cone\ X\ {\isacharequal}\ polyhedral{\isacharunderscore}cone\ A\ {\isasymand}\isanewline
+\ \ \ \ {\isacharparenleft}X\ {\isasymsubseteq}\ {\isasymint}\isactrlsub v\ {\isasyminter}\ Bounded{\isacharunderscore}vec\ Bnd\ {\isasymlongrightarrow}\ A\ {\isasymin}\ {\isasymint}\isactrlsub m\ {\isasyminter}\ Bounded{\isacharunderscore}mat\ {\isacharparenleft}det{\isacharunderscore}bound\ {\isacharparenleft}n{\isacharminus}{\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}max\ {\isadigit{1}}\ Bnd{\isacharparenright}{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{farkas-minkowsky-2}{
+\isacommand{lemma}\isamarkupfalse%
+\ farkas{\isacharunderscore}minkowsky{\isacharunderscore}weyl{\isacharunderscore}theorem{\isacharunderscore}{\isadigit{2}}{\isacharcolon}\isanewline
+\ \ \isakeyword{assumes}\ A{\isacharcolon}\ {\isachardoublequoteopen}A\ {\isasymin}\ carrier{\isacharunderscore}mat\ nr\ n{\isachardoublequoteclose}\isanewline
+\ \ \isakeyword{shows}\ {\isachardoublequoteopen}{\isasymexists}\ X{\isachardot}\ X\ {\isasymsubseteq}\ carrier{\isacharunderscore}vec\ n\ {\isasymand}\ finite\ X\isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ {\isasymand}\ polyhedral{\isacharunderscore}cone\ A\ {\isacharequal}\ cone\ X\isanewline
+\ \ {\isasymand}\ {\isacharparenleft}A\ {\isasymin}\ {\isasymint}\isactrlsub m\ {\isasyminter}\ Bounded{\isacharunderscore}mat\ Bnd\ {\isasymlongrightarrow}\isanewline
+\ \ \ \ \ X\ {\isasymsubseteq}\ {\isasymint}\isactrlsub v\ {\isasyminter}\ Bounded{\isacharunderscore}vec\ {\isacharparenleft}det{\isacharunderscore}bound\ {\isacharparenleft}n{\isacharminus}{\isadigit{1}}{\isacharparenright}\ {\isacharparenleft}max\ {\isadigit{1}}\ Bnd{\isacharparenright}{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{farkas-minkowsky}{
+\isacommand{lemma}\isamarkupfalse%
+\ farkas{\isacharunderscore}minkowsky{\isacharunderscore}weyl{\isacharunderscore}theorem{\isacharcolon}\isanewline
+\ \ {\isachardoublequoteopen}{\isacharparenleft}{\isasymexists}\ X{\isachardot}\ X\ {\isasymsubseteq}\ carrier{\isacharunderscore}vec\ n\ {\isasymand}\ finite\ X\ {\isasymand}\ P\ {\isacharequal}\ cone\ X{\isacharparenright}\isanewline
+\ \ {\isasymlongleftrightarrow}\ {\isacharparenleft}{\isasymexists}\ A\ nr{\isachardot}\ A\ {\isasymin}\ carrier{\isacharunderscore}mat\ nr\ n\ {\isasymand}\ P\ {\isacharequal}\ polyhedral{\isacharunderscore}cone\ A{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet

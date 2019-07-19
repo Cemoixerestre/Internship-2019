@@ -1,0 +1,74 @@
+\DefineSnippet{satisfies-mixed}{
+\isacommand{fun}\isamarkupfalse%
+\ satisfies{\isacharunderscore}mixed{\isacharunderscore}constraints\ {\isacharparenleft}\isakeyword{infixl}\ {\isachardoublequoteopen}{\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s{\isachardoublequoteclose}\ {\isadigit{1}}{\isadigit{0}}{\isadigit{0}}{\isacharparenright}\ \isakeyword{where}\isanewline
+{\isachardoublequoteopen}v\ {\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s\ {\isacharparenleft}cs{\isacharcomma}\ I{\isacharparenright}\ {\isacharequal}\ {\isacharparenleft}v\ {\isasymTurnstile}\isactrlsub c\isactrlsub s\ cs\ {\isasymand}\ {\isacharparenleft}{\isasymforall}\ i\ {\isasymin}\ I{\isachardot}\ v\ i\ {\isasymin}\ {\isasymint}{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{bb-measure}{
+\isacommand{fun}\isamarkupfalse%
+\ bb{\isacharunderscore}measure\ \isakeyword{where}\isanewline
+{\isachardoublequoteopen}bb{\isacharunderscore}measure\ {\isacharparenleft}{\isacharunderscore}{\isacharcomma}\ Is{\isacharcomma}\ lb{\isacharcomma}\ ub{\isacharparenright}\ {\isacharequal}\ nat\ {\isacharparenleft}sum{\isacharunderscore}list\ {\isacharparenleft}map\ {\isacharparenleft}{\isasymlambda}\ x{\isachardot}\ ub\ x\ {\isacharminus}\ lb\ x{\isacharparenright}\ Is{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{bbcore}{
+\isacommand{function}\isamarkupfalse%
+\ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core\ {\isacharcolon}{\isacharcolon}\isanewline
+\ \ {\isachardoublequoteopen}constraint\ list\ {\isasymRightarrow}\ var\ list\ {\isasymRightarrow}\ {\isacharparenleft}var\ {\isasymRightarrow}\ int{\isacharparenright}\ {\isasymRightarrow}\ {\isacharparenleft}var\ {\isasymRightarrow}\ int{\isacharparenright}\isanewline
+\ \ \ \ \ {\isasymRightarrow}\ rat\ valuation\ option{\isachardoublequoteclose}\ \isakeyword{where}\isanewline
+\ \ {\isachardoublequoteopen}branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core\ cs\ Is\ lb\ ub\ {\isacharequal}\isanewline
+\ \ \ \ {\isacharparenleft}case\ simplex\ {\isacharparenleft}cs\ {\isacharat}\ bounds{\isacharunderscore}to{\isacharunderscore}constraints\ Is\ lb\ ub{\isacharparenright}\ of\isanewline
+\ \ \ \ \ \ \ Unsat\ {\isacharunderscore}\ {\isasymRightarrow}\ None\isanewline
+\ \ \ \ \ {\isacharbar}\ Sat\ r\ {\isasymRightarrow}\ {\isacharparenleft}let\ v\ {\isacharequal}\ {\isasymlangle}r{\isasymrangle}\ in\isanewline
+\ \ \ \ \ \ \ \ \ case\ find\ {\isacharparenleft}{\isasymlambda}\ x{\isachardot}\ v\ x\ {\isasymnotin}\ {\isasymint}{\isacharparenright}\ Is\ of\isanewline
+\ \ \ \ \ \ \ \ \ \ \ None\ {\isasymRightarrow}\ Some\ v\isanewline
+\ \ \ \ \ \ \ \ \ {\isacharbar}\ Some\ x\ {\isasymRightarrow}\ {\isacharparenleft}\isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ let\ lb{\isacharprime}\ {\isacharequal}\ {\isacharparenleft}{\isasymlambda}\ y{\isachardot}\ if\ y\ {\isacharequal}\ x\ then\ {\isasymlceil}v\ x{\isasymrceil}\ else\ lb\ y{\isacharparenright}\ in\isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ let\ ub{\isacharprime}\ {\isacharequal}\ {\isacharparenleft}{\isasymlambda}\ y{\isachardot}\ if\ y\ {\isacharequal}\ x\ then\ {\isasymlfloor}v\ x{\isasymrfloor}\ else\ ub\ y{\isacharparenright}\ in\isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ let\ sol\ {\isacharequal}\ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core\ cs\ Is\ lb\ ub{\isacharprime}\ in\isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ if\ sol\ {\isasymnoteq}\ None\ then\ sol\isanewline
+\ \ \ \ \ \ \ \ \ \ \ \ else\ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core\ cs\ Is\ lb{\isacharprime}\ ub{\isacharparenright}{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{bbcore-sat}{
+\isacommand{lemma}\isamarkupfalse%
+\ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core{\isacharunderscore}sat{\isacharcolon}\isanewline
+\ \ {\isachardoublequoteopen}branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core\ cs\ Is\ lb\ ub\ {\isacharequal}\ Some\ v\ {\isasymLongrightarrow}\isanewline
+\ \ \ v\ {\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s\ {\isacharparenleft}set\ cs{\isacharcomma}\ set\ Is{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{bbcore-unsat}{
+\isacommand{lemma}\isamarkupfalse%
+\ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core{\isacharunderscore}unsat{\isacharcolon}\isanewline
+\ \ {\isachardoublequoteopen}branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core\ c\ Is\ lb\ ub\ {\isacharequal}\ None\ {\isasymLongrightarrow}\isanewline
+\ \ \ {\isasymforall}\ i\ {\isasymin}\ set\ Is{\isachardot}\ of{\isacharunderscore}int\ {\isacharparenleft}lb\ i{\isacharparenright}\ {\isasymle}\ v\ i\ {\isasymand}\ v\ i\ {\isasymle}\ of{\isacharunderscore}int\ {\isacharparenleft}ub\ i{\isacharparenright}\ {\isasymLongrightarrow}\isanewline
+\ \ \ {\isasymnot}\ {\isacharparenleft}v\ {\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s\ {\isacharparenleft}set\ c{\isacharcomma}\ set\ Is{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{mats-vecs-of-constraints}{
+   %
+\begin{isabelle}%
+{\isasymlbrakk}mats{\isacharunderscore}vecs{\isacharunderscore}of{\isacharunderscore}constraints\ {\isacharquery}cs\ {\isacharequal}\ {\isacharparenleft}{\isacharquery}A{\isacharcomma}\ {\isacharquery}b{\isacharcomma}\ {\isacharquery}A{\isacharprime}{\isacharcomma}\ {\isacharquery}b{\isacharprime}{\isacharparenright}{\isacharsemicolon}\isanewline
+\isaindent{\ }{\isacharquery}n\ {\isacharequal}\ {\isadigit{1}}\ {\isacharplus}\ constraints{\isacharunderscore}max{\isacharunderscore}var\ {\isacharquery}cs{\isasymrbrakk}\isanewline
+{\isasymLongrightarrow}\ {\isacharparenleft}{\isasymforall}c{\isasymin}set\ {\isacharquery}cs{\isachardot}\ {\isacharquery}v\ {\isasymTurnstile}\isactrlsub l\isactrlsub e\ c{\isacharparenright}\ {\isacharequal}\ {\isacharparenleft}{\isacharquery}A\ {\isacharasterisk}\isactrlsub v\ vec\ {\isacharquery}n\ {\isacharquery}v\ {\isasymle}\ {\isacharquery}b\ {\isasymand}\ {\isacharquery}A{\isacharprime}\ {\isacharasterisk}\isactrlsub v\ vec\ {\isacharquery}n\ {\isacharquery}v\ {\isacharless}\isactrlsub v\ {\isacharquery}b{\isacharprime}{\isacharparenright}%
+\end{isabelle}
+}%EndSnippet%
+\DefineSnippet{compute-bound}{
+\isacommand{lemma}\isamarkupfalse%
+\ compute{\isacharunderscore}bound{\isacharcolon}\isanewline
+\ \ \isakeyword{assumes}\ {\isachardoublequoteopen}v\ {\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s\ {\isacharparenleft}set\ cs{\isacharcomma}\ I{\isacharparenright}{\isachardoublequoteclose}\isanewline
+\ \ \isakeyword{shows}\ {\isachardoublequoteopen}{\isasymexists}\ v{\isachardot}\ v\ {\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s\ {\isacharparenleft}set\ cs{\isacharcomma}\ I{\isacharparenright}\ {\isasymand}\isanewline
+\ \ \ \ \ \ \ \ \ {\isacharparenleft}{\isasymforall}\ i\ {\isasymin}\ I{\isachardot}\ {\isasymbar}v\ i{\isasymbar}\ {\isasymle}\ of{\isacharunderscore}int\ {\isacharparenleft}compute{\isacharunderscore}bound\ cs{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{branch-and-bound}{
+\isacommand{definition}\isamarkupfalse%
+\ branch{\isacharunderscore}and{\isacharunderscore}bound\ {\isacharcolon}{\isacharcolon}\ {\isachardoublequoteopen}constraint\ list\ {\isasymRightarrow}\ var\ list\ {\isasymRightarrow}\ rat\ valuation\ option{\isachardoublequoteclose}\isanewline
+\isakeyword{where}\ {\isachardoublequoteopen}branch{\isacharunderscore}and{\isacharunderscore}bound\ cs\ Is\ {\isacharequal}\ {\isacharparenleft}\isanewline
+\ \ let\ Bnd\ {\isacharequal}\ compute{\isacharunderscore}bound\ cs\ in\isanewline
+\ \ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}core\ cs\ Is\ {\isacharparenleft}{\isasymlambda}\ {\isacharunderscore}{\isachardot}\ {\isacharminus}Bnd{\isacharparenright}\ {\isacharparenleft}{\isasymlambda}\ {\isacharunderscore}{\isachardot}\ Bnd{\isacharparenright}{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{branch-and-bound-sat}{
+\isacommand{lemma}\isamarkupfalse%
+\ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}sat{\isacharcolon}\isanewline
+\ \ {\isachardoublequoteopen}branch{\isacharunderscore}and{\isacharunderscore}bound\ cs\ Is\ {\isacharequal}\ Some\ v\ {\isasymLongrightarrow}\ v\ {\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s\ {\isacharparenleft}set\ cs{\isacharcomma}\ set\ Is{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
+\DefineSnippet{branch-and-bound-unsat}{
+\isacommand{lemma}\isamarkupfalse%
+\ branch{\isacharunderscore}and{\isacharunderscore}bound{\isacharunderscore}unsat{\isacharcolon}\isanewline
+\ \ \isakeyword{assumes}\ {\isachardoublequoteopen}branch{\isacharunderscore}and{\isacharunderscore}bound\ cs\ Is\ {\isacharequal}\ None{\isachardoublequoteclose}\isanewline
+\ \ \isakeyword{shows}\ {\isachardoublequoteopen}{\isasymnot}\ v\ {\isasymTurnstile}\isactrlsub m\isactrlsub c\isactrlsub s\ {\isacharparenleft}set\ cs{\isacharcomma}\ set\ Is{\isacharparenright}{\isachardoublequoteclose}%
+}%EndSnippet
