@@ -54,7 +54,7 @@ Linear Arithmetic}
 
 This work has been done in an internship in the Department of Computer Science
 of the University of Innsbruck, under the supervision of René Thiemann, in the
-Computer Logic team.
+Computational Logic group.
 
 \tableofcontents
 
@@ -64,12 +64,12 @@ Computer Logic team.
 \section{Introduction}
 \subsection{The Isabelle Proof Assistant}
 Isabelle \cite{Isabelle} is a generic proof assistant. Isabelle/HOL
-(abbreviation of \textit{Higer Order Logic}) is a specialization that is
+(abbreviation of \textit{Higher Order Logic}) is a specialization that is
 generally used.
 
-One of the feature of Isabelle is the use of mathematical symbols to make the
+One of the features of Isabelle is the use of mathematical symbols to make the
 proofs more readable. It also uses automatic provers.
-Moreover, there is the language \textit{Isar} that can is used to conduct proofs
+Moreover, there is the language \textit{Isar} that can be used to conduct proofs
 in a structured way.
 
 For example, here is a proof of the Cantor Theorem (the fact that there is no
@@ -88,8 +88,8 @@ The outline of the proof is the following:
     \notin f(a)$ which is a contradiction (represented by the proposition
     $\mathtt{False}$).
 \end{itemize}
-To prove each of these facts, the automatic provers $\mathtt{blast}$ and
-$\mathtt{auto}$ are used.
+To prove each of these facts, the tactics $\mathtt{blast}$ and
+$\mathtt{auto}$ are used, which internally rely upon automatic provers.
 
 It is also possible to define objects in the functional programming way in
 Isabelle/HOL and to export code. This way, it is possible to have a certified
@@ -102,13 +102,13 @@ correctness and exporting its code.
 \subsection{SMT Solving and Linear Arithmetic}
 \label{smt}
 Let $T$ be a quantifier-free theory. A $T$-solver is an algorithm to check if a
-finite set of atom of $T$ can be satisfied.
+finite set of atoms over $T$ can be satisfied.
 
 For example, the theory of \textit{linear arithmetic} is composed of atoms (also
 called \textit{constraints}) of the form
 $$\sum_{i < n} a_i x_i \bowtie b$$
 where $a_0, ..., a_{n-1}, b$ are rational constants, $x_0, ..., x_{n-1}$ are
-variables and $\bowtie \in \{=,\leqslant,\geqslant,<,>\}$ is a comparison
+variables and ${\bowtie} \in \{=,\leqslant,\geqslant,<,>\}$ is a comparison
 operator. An assignement $v$ is a function that maps variables to rationals.
 If $c = \sum a_i x_i \bowtie b$ is a constraint,  we say that the assignement
 $v$ satisfies the constraint c (or $v \vDash c$) if
@@ -121,7 +121,7 @@ maximizes a linear objective function).
 
 The other theory we will study is the theory of \textit{mixed-integer linear
 arithmetic}. A mixed-integer linear problem (MILP)
-consists of linear problem where some variables are
+consists of a linear problem where some variables are
 required to be integer. Furthermore, if all the variables are required to be
 integer, the problem is called an \textit{integer linear problem} (ILP).
 
@@ -147,7 +147,7 @@ an assignement $v$ that satisfies $\Phi$, or to know if no such assignement
 exists. This problem is called \textbf{Satisfiability Modulo Theory} (SMT).
 
 % TODO: give a simpler example, and move completely this into the appendix
-For example, a SMT instance based on linear arithmetic would be:
+For example, an SMT instance based on linear arithmetic would be:
 $$\Phi \equiv (A \vee B \vee C) \wedge (\neg A \vee B) \wedge
               (\neg A \vee C \vee D) \wedge (\neg C \vee D)$$
 with
@@ -331,10 +331,11 @@ loop. This is why we will try to add constraints of the form $-B \leqslant x_i
 the bounded problem admits a solution if and only if the original problem admits
 a solution. This is what we are going to see in the next section.
 
-\subsection{Obtening bounds for ILPs and MILPs}
+\subsection{Obtaining bounds for ILPs and MILPs}
 \label{schrijverbnd}
-First of all, let us remark that if a linear problem contains only large
-inequalities, it could be put in the form:
+First of all, let us remark that if a linear problem contains only equalities and 
+non-strict inequalities, 
+it could be put in the form:
 
 \begin{displaymath}
   \left\{
@@ -352,7 +353,7 @@ $$A = (a_{ij})_{\substack{1 \leqslant i \leqslant n \\
 $b = (b_j)_{1 \leqslant j \leqslant p}$. We identify a valuation of $n$
 variables to a vector of dimension $n$.
 
-Now, we are going to give the outline of a proof that MILPs admits a solution
+Now, we are going to give the outline of a proof that MILPs admit a solution
 if and only if they admit a solution of small size. In what follows, we will
 focus on ILPs, but the results can be easily extended to MILPs. Most of the
 definitions and results can be found in Schrijver's book
@@ -362,7 +363,7 @@ definitions and results can be found in Schrijver's book
   A set of points $C$ is a \textup{finitely generated cone}
   \ifff{} $C = \cone~\{x_0, ..., x_{n-1}\}$ where
   $$\cone~\{x_0, ..., x_{n-1}\} =
-      \left\{\sum_{i=0}^{i<n} \lambda_i x_i~|~
+      \left\{\sum_{i=0}^{n-1} \lambda_i x_i~|~
                \lambda_0, ..., \lambda_{n-1} \geqslant 0\right\}
   $$
   for some $x_0, ..., x_{n-1}$.
@@ -384,14 +385,14 @@ definitions and results can be found in Schrijver's book
 \end{definition}
 
 Note that a polyhedron could be interpreted as the set of solutions of a linear
-problem with only large inequalities.
+problem with only non-strict inequalities.
 
 \begin{definition}[Polytope]
   A set of points $P$ is a \textup{polytope} \ifff{} it is the convex hull of a
   finite set $C = \{x_0, ..., x_{m-1}\}$, \textit{i.e}
   $$P = \left\{
-    \sum_{i=0}^{i<m} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \geqslant 0
-                                  \wedge \sum_{i=0}^{i<m} \lambda_i = 1
+    \sum_{i=0}^{m-1} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \geqslant 0
+                                  \wedge \sum_{i=0}^{m-1} \lambda_i = 1
         \right\}$$
 
   We will also use the following notation: $P = \hull~C$.
@@ -467,7 +468,7 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
 
 \begin{theorem}[Meyer (1974)]
   For any rational polyhedron $P$, $P_I$ is a polyhedron. Moreover, if
-  $P = Q + C$ with $Q$ a polytope and $C$ a cone, the there exists a polytope
+  $P = Q + C$ with $Q$ a polytope and $C$ a cone, then there exists a polytope
   $Q'$ such that $P_I = Q' + C$.
 \end{theorem}
 \begin{proof}
@@ -476,7 +477,7 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
   Without loss of generality we can assume that the $y_i$'s are integral.
 
   Let us define
-  $$B = \left\{\sum_{i=0}^{i<s} \mu_i y_i~|~
+  $$B = \left\{\sum_{i=0}^{s-1} \mu_i y_i~|~
                0 \leqslant \mu_i \leqslant 1\right\}$$
   and show that $$P = (Q + B)_I + C$$
 
@@ -620,7 +621,7 @@ We finally have the desired result:
   $$B = (n + 1)! \cdot m^n$$
 \end{corollary}
 
-With the same ouline of proof, we can obtain a more general result that
+With the same outline of proof, we can obtain a more general result that
 encompasses MILPs and strict inequalities. 
 
 \begin{theorem}[Existence of small solutions for MILPs]
@@ -659,7 +660,7 @@ have been formalized.
 This was done in collaboration with René Thiemann and Ralph Bottesch:
 \textit{TODO: complete}
 \begin{itemize}
-  \item René developped results about integral and bounded vectors or matrices
+  \item René developed results about integral and bounded vectors or matrices
     and ...
   \item Ralph focused on the demonstration of the fundamental theorem of linear
     inequalities and ...
@@ -702,7 +703,7 @@ where $V$ is a set of vectors and $c$ is a map from vectors to scalars.
 
 A problem that can occur is the distributivity when we multiply this sum by
 a matrix. Indeed, it is clear that
-$$A \sum_i \lambda_i x_i = \sum_i \lambda_i \cdot A x_i$$. But this equality
+$$A \sum_i \lambda_i x_i = \sum_i \lambda_i \cdot A x_i.$$ But this equality
 cannot be simply stated with the operator $\mathtt{lincomb}$ Indeed, it is
 possible that there exists two vectors $x_0$ and $x_1$ such that
 $A x_0 = A x_1$. If we want to express $\sum_i \lambda_i \cdot A x_i$ using
@@ -714,7 +715,7 @@ $$f(\sum_i \lambda_i x_i) = \sum_i \lambda_i f(x_i)$$ where $f$ is a linear map.
 
 A solution to tackle this problem is to use linear combinations over lists,
 defined this way:
-$$\mathtt{lincomb\_list}~c~V_s = \sum_{i = 0}^{i < l} c(i) \cdot v_i$$
+$$\mathtt{lincomb\_list}~c~V_s = \sum_{i = 0}^{l-1} c(i) \cdot v_i$$
 where $V_s = [v_0, ..., v_{l-1}]$ is a list of vectors and $c$ is a function
 mapping integers to scalars. 
 
@@ -793,7 +794,7 @@ variables are bounded by \texttt{lb} and \texttt{ub}:
 where the Isabelle notation $v \vDash_{mcs} (S, I)$ is equivalent to notation
 $v \vDash_I S$.
 
-The goal now is to used the theorem \ref{small-milp} to have a formalized
+The goal now is to use the theorem \ref{small-milp} to have a formalized
 complete solver for MILPs. The problem is that linear constraints are coded with
 a datastructure called \textit{linear polynomials} that should be converted to
 the form of vectors and matrices to use the theorem.
