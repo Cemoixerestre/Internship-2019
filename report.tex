@@ -198,7 +198,7 @@ $T$-solver implements the following interface:
 %TODO: explain why it is called an incremental interface
 We will call such an inteface an \textit{incremental interface}.
 A similar description can be found in \cite{Dutertre2006} and
-\cite{Thiemann2018}.
+\cite{Thiemann2018,BHT2019}.
 
 An example of an execution of DPLL($T$) is given in appendix \ref{dpll}.
 
@@ -206,7 +206,7 @@ Dutertre and de Moura have proposed a Simplex-based solver to solve linear
 arithmetic \cite{Dutertre2006}. A partial version of this algorithm has been
 formalized in Isabelle by Spasić and Marić \cite{Spasic2012} and extended to
 use the incremental interface by Ralph Bottesch, Max Haslbeck and René Thiemann
-\cite{Thiemann2018}. The ultimate goal of this internship is to extend the
+\cite{Thiemann2018,BHT2019}. The ultimate goal of this internship is to extend the
 previous work to solve MILPs.
 
 \section{Resolution of Mixed-Integer Linear Problems}
@@ -467,6 +467,7 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
 \end{definition}
 
 \begin{theorem}[Meyer (1974)]
+\label{meyer theorem}
   For any rational polyhedron $P$, $P_I$ is a polyhedron. Moreover, if
   $P = Q + C$ with $Q$ a polytope and $C$ a cone, then there exists a polytope
   $Q'$ such that $P_I = Q' + C$.
@@ -654,16 +655,16 @@ of correction of a branch-and-bound algorithm (section \ref{forbb}).
 \label{forlineq}
 This part concerns the formalization of the results from Schijver's book
 described in section \ref{schrijverbnd}.
-Also, other results including the Farkas' lemma or the Carathéodory's theorem
+Also, other results including Farkas' lemma and the Carathéodory's theorem
 have been formalized.
 
 This was done in collaboration with René Thiemann and Ralph Bottesch:
-\textit{TODO: complete}
 \begin{itemize}
-  \item René developed results about integral and bounded vectors or matrices
-    and ...
-  \item Ralph focused on the demonstration of the fundamental theorem of linear
-    inequalities and ...
+  \item René included bounds for the various operations that are performed 
+  when executing the decomposition theorem.  Moreover, he verified Theorem~\ref{meyer theorem}
+  of Meyer. 
+  \item Ralph and René formalized the fundamental theorem of linear
+    inequalities.
   \item I mainly focused on the demonstration of the Farkas-Minkowsky-Weyl and
     the decomposition theorem.
 \end{itemize}
@@ -672,8 +673,8 @@ In total, 5551 lines of proofs were written. The work was published in the
 \textit{Archive for Formal Proofs}, a collection of proof libraries in Isabelle.
 \cite{Linear_Inequalities-AFP}.
 
-\textit{Shoud I talk about the extra work mainly done by René, such as the
-preparation for the AFP submission?}
+%\textit{Shoud I talk about the extra work mainly done by René, such as the
+%preparation for the AFP submission? RT: No.}
 
 The formalization follows the outline given in section \ref{schrijverbnd}. For
 example, several theorems have particular formulations including bounds:
