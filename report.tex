@@ -96,23 +96,22 @@ Isabelle/HOL and to export code. This way, it is possible to have a certified
 implementation of an algorithm by writing it in Isabelle/HOL, proving its
 correctness and exporting its code.
 
-% TODO: re-organize the next subsections this way:
-% - a subsection about linear and integral linear arithmetic
-% - a subsection about SMT-solving and incremental interface
-\subsection{SMT Solving and Linear Arithmetic}
-\label{smt}
-Let $T$ be a quantifier-free theory. A $T$-solver is an algorithm to check if a
-finite set of atoms over $T$ can be satisfied.
+\subsection{Linear Arithmetic}
 
-For example, the theory of \textit{linear arithmetic} is composed of atoms (also
-called \textit{constraints}) of the form
+Let $a_0, ..., a_{n-1}, b$ be real constants, $x_0, ..., x_{n-1}$ be
+variables and ${\bowtie} \in \{\leqslant,\geqslant,<,>\}$ is a comparison
+operator. We can then define a linear constraint $c$:
+
 $$\sum_{i < n} a_i x_i \bowtie b$$
-where $a_0, ..., a_{n-1}, b$ are rational constants, $x_0, ..., x_{n-1}$ are
-variables and ${\bowtie} \in \{=,\leqslant,\geqslant,<,>\}$ is a comparison
-operator. An assignement $v$ is a function that maps variables to rationals.
-If $c = \sum a_i x_i \bowtie b$ is a constraint,  we say that the assignement
-$v$ satisfies the constraint c (or $v \vDash c$) if
-$$\sum a_i v(x_i) \bowtie b$$.
+
+An assignement $v$ is a function that maps variables to real numbers.
+We say that the assignement $v$ satisfies the constraint $c$ (or $v \vDash c$)
+if $$\sum a_i v(x_i) \bowtie b$$. These formulas define the theory of
+\textit{linear arithmetic}.
+
+If $C$ is a finite set of linear constraints,
+we will use the notation $v \vDash C$ for $\forall c \in C.~v \vDash c$. The
+problem of finding such an assignement is called a \textit{linear problem}.
 
 Note that we are only interested in the decision problem (\textit{i.e} checking
 if a set of constraints admits a satisfying assignment), not the optimization
@@ -120,50 +119,44 @@ problem (\textit{i.e} finding an assignment satisfying the constraints that
 maximizes a linear objective function). 
 
 The other theory we will study is the theory of \textit{mixed-integer linear
-arithmetic}. A mixed-integer linear problem (MILP)
-consists of a linear problem where some variables are
-required to be integer. Furthermore, if all the variables are required to be
+arithmetic}. A mixed-integer linear problem (MILP) consists of a linear
+problem where some variables are required to be integral. We will only consider
+MILPs with only rational coefficients (or equivalently integral coefficients).
+Furthermore, if all the variables are required to be
 integer, the problem is called an \textit{integer linear problem} (ILP).
 
 For example:
 \begin{displaymath}
   \left\{
-  \begin{array}{cc}
-    x + y & \geqslant 3 \\
-    y - x & < 2 \\
-    x \in \ints
+  \begin{array}{l}
+    x + y \geqslant 3 \\
+    y - x < 2 \\
   \end{array}
-  \right.
+  \right|
+  x \in \ints
 \end{displaymath}
 is a MILP.
 
 More formally, if $S$ in a set of linear constraints and $I$ the set of
-variables that are required to be integer, if $v$ is a valuation, I will use the
-notation $$v \vDash_I S$$ for $v \vDash S$ and
+variables that are required to be integral, if $v$ is a valuation, I will use
+the notation $$v \vDash_I S$$ for $v \vDash S$ and
 $\forall x_i \in I.~v(x_i) \in \ints$.
+
+\subsection{SMT Solving}
+\label{smt}
+Let $T$ be a quantifier-free theory. A $T$-solver is an algorithm that checks
+if a finite set of atoms over $T$ can be satisfied. For linear or mixed-integer
+linear arithmetic, atoms are linear constraints and the work of a $T$-solver
+consists in deciding whether there exists an assignement
+that satisfies a set of constraints.
 
 Let $\Phi$ be a boolean formula of atoms of the theory $T$. We may want to find
 an assignement $v$ that satisfies $\Phi$, or to know if no such assignement
 exists. This problem is called \textbf{Satisfiability Modulo Theory} (SMT).
 
-% TODO: give a simpler example, and move completely this into the appendix
 For example, an SMT instance based on linear arithmetic would be:
-$$\Phi \equiv (A \vee B \vee C) \wedge (\neg A \vee B) \wedge
-              (\neg A \vee C \vee D) \wedge (\neg C \vee D)$$
-with
-\begin{displaymath}
-\begin{array}{lclccc}
-  A & \equiv & x & + & y & \geqslant 3 \\
-  B & \equiv & x &   &   & \leqslant 1 \\
-  C & \equiv &   &   & y & \leqslant 1 \\
-  D & \equiv & y & - & x & < 2         \\
-\end{array}
-\end{displaymath}
+$$(x + y > 0 \vee z \geqslant 0) \wedge \neg (x \geqslant 0)$$
 
-Now that SMT and linear arithmetic have been presented, we can move on to the
-basics of their resolution.
-
-\subsection{Incremental Interface for SMT solvers}
 An efficient procedure to solve SMT problems is DPLL($T$)
 \cite[Section 3.2]{Decision2016},
 which works as a combination of a SAT-solver and a $T$-solver. Here is a quick
@@ -172,7 +165,7 @@ description of such an algorithm:
   \item Replace every atom by a SAT variable to obtain a SAT formula $\Phi$.
     Run a SAT-solver to find a valuation of each variable to 0 or 1 that
     satisfies this SAT-formula.
-  \item From this affectation, derive a conjuction of $T$-atoms. Run a
+  \item From this affectation, derive a conjuction of atoms. Run a
     $T$-solver to find an assignement that satisfies this conjuction.
   \item If an assignment $v$ is found, return $v$
   \item If no assignment is found, from thus conjuction find a contradicting
@@ -187,16 +180,17 @@ $T$-solver implements the following interface:
     $T$-atoms the should be satisfied.
   \item $\icheck$: Runs a $T$-solver to find an assignment to the set of
     asserted atoms. If such an assignement is found, returns it. Otherwise,
-    returns a subset of inconsistent assert atoms.
+    returns a subset of inconsistent asserted atoms.
   \item $\icheckpoint$: Returns a checkpoint $c$ that contains all the necessary
     information to backtrack to the current state.
   \item $\ibacktrack{c}$: Backtracks to the state represented by the checkpoint
     $c$.
 \end{itemize}
 
-%TODO: explain why it is called an incremental interface
-We will call such an inteface an \textit{incremental interface}.
-A similar description can be found in \cite{Dutertre2006} and
+%TODO: find a better explanation of the term "incremental interface"
+We will call such an inteface an \textit{incremental interface} as it allows us
+to add or remove constraints without having to do all the computation from the
+begining. A similar description can be found in \cite{Dutertre2006} and
 \cite{Thiemann2018,BHT2019}.
 
 An example of an execution of DPLL($T$) is given in appendix \ref{dpll}.
@@ -212,7 +206,7 @@ previous work to solve MILPs.
 In this section, I will describe an algorithm to solve MILPs and the mathematics
 required to prove its correctness.
 
-\subsection{The Branch-and-Bound algorithm}
+\subsection{The Branch-and-Bound Algorithm}
 \label{bbdescr}
 % TODO: give a reference?
 Branch-and-bound is a simple algorithm to solve ILPs and MILPs. Though it can be
@@ -225,7 +219,7 @@ following:
 \begin{itemize}
   \item Search a valuation $v$ such that $v \vDash S$. If no solution exists,
     return \cunsat{}.
-  \item If for all $x_i \in I$, $v(i) \in \ints$, then $v \vDash_I S$.
+  \item If for all $x_i \in I$, $v(x_i) \in \ints$, then $v \vDash_I S$.
     Return $v$.
   \item If there exists a variable $x_i \in I$ such that
     $v(x_i) \notin \ints$, we can remark that for all solution of this
@@ -266,9 +260,9 @@ let us examine the following ILP:
   \begin{array}{l}
     3x - 3y \geqslant 1 \\
     3x - 3y \leqslant 2 \\
-    x, y \in \ints \\
   \end{array}
-  \right.
+  \right|
+  x, y \in \ints
 \end{equation}
 
 This problem has no solution, and its relaxation (that is the problem composed
@@ -330,7 +324,7 @@ loop. This is why we will try to add constraints of the form $-B \leqslant x_i
 the bounded problem admits a solution if and only if the original problem admits
 a solution. This is what we are going to see in the next section.
 
-\subsection{Obtaining bounds for ILPs and MILPs}
+\subsection{Obtaining Bounds for ILPs and MILPs}
 \label{schrijverbnd}
 First of all, let us remark that if a linear problem contains only equalities and 
 non-strict inequalities, 
@@ -540,7 +534,7 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
     \coordinate (K) at (1, 2);
     \coordinate (L) at (2, 1);
     \coordinate (M) at (4, 1);
-    \coordinate (N) at (5, 2);
+    \coordinate (N) at (6, 3);
     \coordinate (O) at (6, 4);
     \coordinate (P) at (5, 5);
 
@@ -555,9 +549,14 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
     \draw[thick] (M) -- (E');
 
     \draw[red, thick, dashed, ->] (B) -- (B');
+    \draw[red, thick, dashed, ->] (B) -- (B');
+    \draw[red, thick, dashed, ->] (B) -- (2.5, 3);
     \draw[red, thick, dashed, ->] (B') -- (B'');
+    \draw[red, thick, dashed, ->] (2.5, 3) -- (B'');
     \draw[red, thick, dashed, ->] (D) -- (D');
+    \draw[red, thick, dashed, ->] (D) -- (4.5, 3.5);
     \draw[red, thick, dashed, ->] (D') -- (D'');
+    \draw[red, thick, dashed, ->] (4.5, 3.5) -- (D'');
     \draw[red, thick, dashed] (B) -- (D);
     \fill[fill=yellow, opacity=0.5]
       (A') -- (J) -- (I) -- (P) -- (O) -- (N) -- (M) -- (E') -- (extr) -- cycle;
@@ -578,7 +577,7 @@ $$P \cap \ints^n \neq \emptyset \Longleftrightarrow
   (Q + B)_I \neq \emptyset      \Longleftrightarrow
   (Q + B) \cap \ints^n \neq \emptyset$$
 
-% TODO: Cite Schriver?
+% TODO: the following sentence is mathematically unacurate. Rewrite it.
 Moreover, we can assume that the vectors $\{y_0, ..., y_{s-1}\}$ are linearly
 independant using the fundamental theorem of linear inequalities, which implies
 that $s \leqslant n$.
@@ -677,17 +676,14 @@ This was done in collaboration with René Thiemann and Ralph Bottesch:
 \end{itemize}
 
 In total, 5551 lines of proofs were written. The work was published in the
-\textit{Archive for Formal Proofs}, a collection of proof libraries in Isabelle.
+\textit{Archive for Formal Proofs}, a collection of proof libraries in Isabelle
 \cite{Linear_Inequalities-AFP}.
 
-%\textit{Shoud I talk about the extra work mainly done by René, such as the
-%preparation for the AFP submission? RT: No.}
-
 The formalization follows the outline given in section \ref{schrijverbnd}. For
-example, several theorems have particular formulations including bounds:
-\Snippet{farkas-minkowsky-2}
-and a more general formulation:
+example, several theorems have general formulation:
 \Snippet{farkas-minkowsky}
+and particular formulations including bounds:
+\Snippet{farkas-minkowsky-2}
 
 Where the following Isabelle notations are used:
 \begin{itemize}
@@ -716,7 +712,7 @@ cannot be simply stated with the operator $\mathtt{lincomb}$ Indeed, it is
 possible that there exists two vectors $x_0$ and $x_1$ such that
 $A x_0 = A x_1$. If we want to express $\sum_i \lambda_i \cdot A x_i$ using
 $\mathtt{lincomb}$, then the scalar coefficient associated to $A x_0$ is
-neither $c(x_0)$ nor $c(x_1)$ but something like $\sum_{x . A x = A x_0} c(v)$,
+neither $c(x_0)$ nor $c(x_1)$ but something like $\sum_{x . A x = A x_0} c(x)$,
 which is more complicated to work with. More generally, this problem occurs
 everytime we want to state the equality
 $$f(\sum_i \lambda_i x_i) = \sum_i \lambda_i f(x_i)$$ where $f$ is a linear map.
@@ -753,11 +749,9 @@ and then define convex hulls:
 Finally, we have to show that these two definitions are equivalent:
 
 \Snippet{convex-hull-equivalence}
-%\Snippet{finite-cone}
-%\Snippet{cone}
-%\Snippet{cone-list}
-%\Snippet{finite-cone-iff-cone-list}
-%\Snippet{farkas-minkowsky-1}
+
+This kind of equivalence is not always trivial to prove. For example, it took me
+around 300 lines of code to prove the previous result.
 
 \subsection{Formalization of a Branch-and-Bound Algorithm}
 \label{forbb}
@@ -766,16 +760,15 @@ The next part is the formalization of a branch-and-bound algorithm, as described
 in the section \ref{bbdescr}. The idea was to state and prove the correctness of
 a simple algorithm, without any optimization for the moment.
 
-%TODO: talk about \vDash_cs and \vDash_mcs
 I first developped a function $\mathtt{branch\_and\_bound\_core}$ that takes
 four arguments:
 \begin{itemize}
   \item A list of linear constraints \texttt{cs}.
-  \item A list of variables supposed to be integral \texttt{Is}.
-  \item A function \texttt{lb} mapping variables in \texttt{Is} to a lower
-    bound.
-  \item A function \texttt{ub} mapping variables in \texttt{Is} to an upper
-    bound.
+  \item A list of variables \texttt{Is} required to be integral.
+  \item A function \texttt{lb} mapping variables of \texttt{Is} to integral
+    lower bounds.
+  \item A function \texttt{ub} mapping variables of \texttt{Is} to integral
+    upper bounds.
 \end{itemize}
 The code of this function can be found in appendix \ref{bbcode}
 
@@ -816,7 +809,7 @@ considerably simplified the proofs (around 80 lines of proof were saved).
 The conversion theorem is the following:
 \Snippet{mats-vecs-of-constraints}
 
-After some work around converting rational constraints to integral constraints,
+After some work to convert rational constraints to integral constraints,
 I could define a function \texttt{compute\_bound} that maps a list of
 constraints to the desired bound and prove that:
 \Snippet{compute-bound}
@@ -837,9 +830,34 @@ having a more effective formalized MILP-solver with an incremental interface.
 Here is the outline of what should be done after my internship to complete the
 work.
 
-\subsection{Using the incremental solver}
+\subsection{Using the Incremental Interface}
+We can remark that for the branch-and-bound algorithm, at the branching step, we
+only try to solve problems with a single constraint added to the original
+problem. This is why it should be interesting to use the incremental interface
+describe in section \ref{smt}. Indeed, in the current implementation, the
+computation (including the preprocessing steps) is always made from scratch.
+
+The problem is that in the current interface, the internal state is initialized
+with a (finite) list of constraints, and only constraints of this list can be
+asserted. To efficiently use the incrementality, this interface should be
+rewritten so that arbitrary constraints could be asserted.
 
 \subsection{Gomory Cuts}
+
+Suppose that a valuation $v$ such that $v \vDash_I S$ has been found but that
+$v \not\vDash_I S$. A \textit{cut} is a
+linear constraint $c$ such that $v$ does not satisfy $c$ but for every
+mixed-integer solution $v \vDash_I S$, $v$ satisfies $c$. The goal of a cut is
+to prune non-integral solutions of the problems without affecting integral
+solutions.
+
+A method to obtain cuts is described in \cite[Section 4]{Dutertre2006}. These
+cuts are called \textit{Gomory cuts}. The combination of the branch-and-bound
+algorithm with cut generation is called \textit{branch-and-cut} and a dramatic
+acceleration of the branch-and-bound algorithm has been observed.
+%TODO: find a reference.
+
+% TODO: give an example
 
 \subsection{Finalization}
 
@@ -860,17 +878,29 @@ a SMT-solver.
 
 \section{Example: an Execution of DPLL($T$)}
 \label{dpll}
-Suppose that we want to solve the formula $\Phi$ given in section \ref{smt}
+Let us solve the following SMT-instance (based on linear arithmetic):
+$$\Phi \equiv (A \vee B \vee C) \wedge (\neg A \vee B) \wedge
+              (\neg A \vee C \vee D) \wedge (\neg C \vee D)$$
+with
+\begin{displaymath}
+\begin{array}{lccccl}
+  A & \equiv & x & + & y & \geqslant 3 \\
+  B & \equiv & x &   &   & \leqslant 1 \\
+  C & \equiv &   &   & y & \leqslant 1 \\
+  D & \equiv & y & - & x & < 2         \\
+\end{array}
+\end{displaymath}
 using DPLL($T$). First, let us interpret $\Phi$ as a SAT-formula and find an
 valuation that satisfies it. For example:
 \begin{itemize}
-  \item Arbitrarily affects $A$ to 1. Asserts the atom $A$. Get a checkpoints
-    $c_1$.
-  \item To solve the clause $(\neg A \vee B)$, we must affect $B$ to 1.
-    Asserts the atom $B$. Get a checkpoint $c_2$.
-  \item Affects $C$ to 1. Asserts the atom $C$. Get a checkpoint $c_3$.
-  \item To solve the clause $(\neg C \vee D)$, we must affect $D$ to 1.
-    Asserts the atom $D$. Get a checkpoint $c_4$.
+  \item Arbitrarily affects the variable $A$ to 1. Asserts the atom $A$. Get a
+    checkpoints $c_1$.
+  \item To solve the clause $(\neg A \vee B)$, we must affect the variable $B$
+    to 1. Asserts the atom $B$. Get a checkpoint $c_2$.
+  \item Affects the variable $C$ to 1. Asserts the atom $C$. Get a checkpoint
+    $c_3$.
+  \item To solve the clause $(\neg C \vee D)$, we must affect the variable $D$
+    to 1. Asserts the atom $D$. Get a checkpoint $c_4$.
 \end{itemize}
 
 Now, we have found an valuation that satisfies $\Phi$ interpreted as a
@@ -897,13 +927,13 @@ clause $(\neg A \vee \neg B \vee \neg C)$ is true. Instead of solving $\Phi$, we
 will try to solve $\Phi' = \Phi \wedge (\neg A \vee \neg B \vee \neg C)$. We
 need to backtrack, but we can notice that we could bactrack just before
 the choice to affect $C$ to 1 was made. So let us backtrack to $c_2$, where only
-$A$ and $B$ are affected.
+the variables $A$ and $B$ are affected.
 
 \begin{itemize}
   \item To solve the clause $(\neg A \vee \neg B \vee \neg C)$, we must affect
-    $C$ to 0. Asserts the atom $\neg C$. Get a checkpoint $c'_3$.
-  \item To solve the clause $(\neg A \vee C \vee D)$, we must affect $D$ to 1.
-    Asserts the atom $D$. Get a checkpoint $c'_4$.
+    the variable $C$ to 0. Asserts the atom $\neg C$. Get a checkpoint $c'_3$.
+  \item To solve the clause $(\neg A \vee C \vee D)$, we must affect the
+    variable $D$ to 1. Asserts the atom $D$. Get a checkpoint $c'_4$.
 \end{itemize}
 
 Again, we have a valuation that satisfies $\Phi'$ interpreted as a
@@ -924,7 +954,7 @@ to the system:
 $\icheck$ may return the assignement $(x=1, y=2)$. Finally, the formula $\Phi$
 is satisfiable, and $(x=1, y=2) \vDash \Phi$.
 
-\section{Code of the Core of the Branch-and-Bound procedure}
+\section{Code of the Core of the Branch-and-Bound Procedure}
 \label{bbcode}
 
 \Snippet{bbcore}
@@ -932,8 +962,12 @@ To understand the code:
 \begin{itemize}
   \item \texttt{bounds\_to\_constraints Is lb ub} returns a list containing the
     constraints $x_i \geqslant \mathtt{lb}~x_i$ and
-    $x_i \leqslant \mathtt{lb}~x_i$ for all element $x_i$ of the list
+    $x_i \leqslant \mathtt{ub}~x_i$ for all element $x_i$ of the list
     \texttt{Is}.
+  \item \texttt{@} is the symbol used for list concatenation. In this case,
+    \linebreak \texttt{cs @ bounds\_to\_constraints Is lb ub} is the list
+    composed by the constraints of \texttt{cs} and of
+    \texttt{bounds\_to\_constraints~Is~lb~ub}.
   \item The function \texttt{simplex} takes as arguments a list of
     constraints and returns \texttt{Unsat} if there is no rational solution to
     this combination of constraints, or \texttt{Sat v} such that
