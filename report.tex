@@ -52,14 +52,12 @@ Linear Arithmetic}
 
 \maketitle
 
-This work has been done in an internship in the Department of Computer Science
+This work has been done in an internship between may and July 2019
+in the Department of Computer Science
 of the University of Innsbruck, under the supervision of René Thiemann, in the
 Computational Logic group.
 
 \tableofcontents
-
-\begin{abstract}
-\end{abstract}
 
 \section{Introduction}
 \subsection{The Isabelle Proof Assistant}
@@ -99,15 +97,15 @@ correctness and exporting its code.
 \subsection{Linear Arithmetic}
 
 Let $a_0, ..., a_{n-1}, b$ be real constants, $x_0, ..., x_{n-1}$ be
-variables and ${\bowtie} \in \{\leqslant,\geqslant,<,>\}$ is a comparison
+variables and ${\bowtie} \in \{\leqslant,\geqslant,<,>\}$ be a comparison
 operator. We can then define a linear constraint $c$:
 
 $$\sum_{i < n} a_i x_i \bowtie b$$
 
 An assignement $v$ is a function that maps variables to real numbers.
 We say that the assignement $v$ satisfies the constraint $c$ (or $v \vDash c$)
-if $$\sum a_i v(x_i) \bowtie b$$. These formulas define the theory of
-\textit{linear arithmetic}.
+if $$\sum_{i < n} a_i v(x_i) \bowtie b$$
+These formulas define the theory of \textit{linear arithmetic}.
 
 If $C$ is a finite set of linear constraints,
 we will use the notation $v \vDash C$ for $\forall c \in C.~v \vDash c$. The
@@ -121,8 +119,8 @@ maximizes a linear objective function).
 The other theory we will study is the theory of \textit{mixed-integer linear
 arithmetic}. A mixed-integer linear problem (MILP) consists of a linear
 problem where some variables are required to be integral. We will only consider
-MILPs with only rational coefficients (or equivalently integral coefficients).
-Furthermore, if all the variables are required to be
+MILPs with only rational coefficients (or equivalently with integral
+coefficients). Furthermore, if all the variables are required to be
 integer, the problem is called an \textit{integer linear problem} (ILP).
 
 For example:
@@ -155,20 +153,20 @@ an assignement $v$ that satisfies $\Phi$, or to know if no such assignement
 exists. This problem is called \textbf{Satisfiability Modulo Theory} (SMT).
 
 For example, an SMT instance based on linear arithmetic would be:
-$$(x + y > 0 \vee z \geqslant 0) \wedge \neg (x \geqslant 0)$$
+$$(x + y > 0 \vee z \leqslant 1) \wedge \neg (x \geqslant 0)$$
 
 An efficient procedure to solve SMT problems is DPLL($T$)
 \cite[Section 3.2]{Decision2016},
 which works as a combination of a SAT-solver and a $T$-solver. Here is a quick
-description of such an algorithm:
+description of the procedure:
 \begin{itemize}
   \item Replace every atom by a SAT variable to obtain a SAT formula $\Phi$.
     Run a SAT-solver to find a valuation of each variable to 0 or 1 that
     satisfies this SAT-formula.
-  \item From this affectation, derive a conjuction of atoms. Run a
-    $T$-solver to find an assignement that satisfies this conjuction.
+  \item From this affectation, derive a conjunction of atoms. Run a
+    $T$-solver to find an assignement that satisfies this conjunction.
   \item If an assignment $v$ is found, return $v$
-  \item If no assignment is found, from thus conjuction find a contradicting
+  \item If no assignment is found, from this conjunction find a contradicting
     subset of atoms. From this subset, derive a new constraint, add it to the
     SAT-formula $\Phi$, and go to the first step.
 \end{itemize}
@@ -209,8 +207,8 @@ required to prove its correctness.
 \subsection{The Branch-and-Bound Algorithm}
 \label{bbdescr}
 % TODO: give a reference?
-Branch-and-bound is a simple algorithm to solve ILPs and MILPs. Though it can be
-stated as an optimization algorithm, we will focus on its formulation for
+Branch-and-bound is a simple algorithm to solve ILPs and MILPs. Though it can
+be stated as an optimization algorithm, we will focus on its formulation for
 decision problems.
 
 Let $S$ and $I$ be respectively the set of linear constraints and the set of
@@ -319,8 +317,9 @@ branch-and-bound algorithm on this problem:
 \end{figure}
 
 In this case, the problem is unbounded and makes the branch-and-bound algorithm
-loop. This is why we will try to add constraints of the form $-B \leqslant x_i
-\leqslant B$ for all variable $x_i$ to bound the problem, at the condition that
+loop. This is why we will try to add constraints of the form
+$$-B \leqslant x_i \leqslant B$$
+for all variable $x_i$ to bound the problem, at the condition that
 the bounded problem admits a solution if and only if the original problem admits
 a solution. This is what we are going to see in the next section.
 
@@ -334,7 +333,7 @@ it could be put in the form:
   \left\{
   \begin{array}{cccccl}
     a_{11} x_1 & + & ...    & + & a_{1n} x_n & \leqslant b_1 \\
-               &   & \vdots &   &            &               \\
+               &   & \ddots &   &            &               \\
     a_{p1} x_1 & + & ...    & + & a_{pn} x_n & \leqslant b_p \\
   \end{array}
   \right.
@@ -634,7 +633,7 @@ encompasses MILPs and strict inequalities.
 \begin{theorem}[Existence of small solutions for MILPs]
   \label{small-milp}
   If $I$ is a subset of $\llbracket 1, n \rrbracket$ and
-  $$P = \{x~|~Ax \leqslant b \cap A'x < b'\}$$ with
+  $$P = \{x~|~Ax \leqslant b \wedge A'x < b'\}$$ with
   $A \in \llbracket -m, m \rrbracket^{p \times n}$,
   $b \in \llbracket -m, m \rrbracket^p$,
   $A' \in \llbracket -m, m \rrbracket^{p' \times n}$,
@@ -652,11 +651,10 @@ encompasses MILPs and strict inequalities.
 %TODO: Find a better introduction
 As we have presented a method to solve MILPs, we can focus of their
 formalization, which has been the main part of the work during this internship.
-It consisted first in the formalization of Schrijvers results concerning linear
+It consisted first in the formalization of Schrijver results concerning linear
 inequalities (section \ref{forlineq}), then in the implementation and the proof
 of correction of a branch-and-bound algorithm (section \ref{forbb}).
 
-%TODO: Find a better section name
 \subsection{Formalization of Results concerning Linear Inequalities}
 \label{forlineq}
 This part concerns the formalization of the results from Schijver's book
@@ -676,16 +674,15 @@ This was done in collaboration with René Thiemann and Ralph Bottesch:
 \end{itemize}
 
 In total, 5551 lines of proofs were written. The work was published in the
-\textit{Archive for Formal Proofs}, a collection of proof libraries in Isabelle
-\cite{Linear_Inequalities-AFP}.
+\textit{Archive for Formal Proofs} (AFP), a collection of proof libraries in
+Isabelle \cite{Linear_Inequalities-AFP}.
 
 The formalization follows the outline given in section \ref{schrijverbnd}. For
 example, several theorems have general formulation:
 \Snippet{farkas-minkowsky}
 and particular formulations including bounds:
 \Snippet{farkas-minkowsky-2}
-
-Where the following Isabelle notations are used:
+where the following Isabelle notations are used:
 \begin{itemize}
   \item $\mathtt{carrier\_vec}~n$ is the set of vectors $\mathbb{K}^n$
     where $\mathbb{K}$ is a field.
@@ -719,9 +716,9 @@ $$f(\sum_i \lambda_i x_i) = \sum_i \lambda_i f(x_i)$$ where $f$ is a linear map.
 
 A solution to tackle this problem is to use linear combinations over lists,
 defined this way:
-$$\mathtt{lincomb\_list}~c~V_s = \sum_{i = 0}^{l-1} c(i) \cdot v_i$$
-where $V_s = [v_0, ..., v_{l-1}]$ is a list of vectors and $c$ is a function
-mapping integers to scalars. 
+$$\mathtt{lincomb\_list}~c~\mathtt{Vs} = \sum_{i = 0}^{l-1} c(i) \cdot v_i$$
+where $\mathtt{Vs} = [v_0, ..., v_{l-1}]$ is a list of vectors and $c$ is a
+function mapping integers to scalars. 
 
 % TODO: with the previous paragraphs, I give the impression that there are only
 % advantages of using lincomb_list. It makes me confused.
@@ -730,35 +727,30 @@ expressed in a direct manner. To use the advantages of both definitions, we
 usually define our concepts in two manners: one using sets and the other using
 lists. For example, here is how non-negative linear combinations are defined,
 for sets and for lists:
-
 \Snippet{nonneg-lincomb}
 \Snippet{nonneg-lincomb-list}
-
 where $\mathtt{c}~`~\mathtt{Vs} = \{\mathtt{c}(x)~|~x \in \mathtt{Vs}\}$
 is the image of the set $\mathtt{Vs}$ under $\mathtt{c}$.
-We can then use this definition to define convex combinations:
 
+We can then use this definition to define convex combinations:
 \Snippet{convex-lincomb}
 \Snippet{convex-lincomb-list}
-
 and then define convex hulls:
-
 \Snippet{convex-hull}
 \Snippet{convex-hull-list}
-
 Finally, we have to show that these two definitions are equivalent:
-
 \Snippet{convex-hull-equivalence}
 
-This kind of equivalence is not always trivial to prove. For example, it took me
-around 300 lines of code to prove the previous result.
+This kind of equivalence is not always trivial to prove. For example, it took
+me around 300 lines of code to prove the previous result.
 
 \subsection{Formalization of a Branch-and-Bound Algorithm}
 \label{forbb}
+%TODO: add a link to a repository containing the code
 
 The next part is the formalization of a branch-and-bound algorithm, as described
-in the section \ref{bbdescr}. The idea was to state and prove the correctness of
-a simple algorithm, without any optimization for the moment.
+in the section \ref{bbdescr}. The idea was to state and prove the correctness
+of a simple algorithm, without any optimization for the moment.
 
 I first developped a function $\mathtt{branch\_and\_bound\_core}$ that takes
 four arguments:
@@ -772,18 +764,20 @@ four arguments:
 \end{itemize}
 The code of this function can be found in appendix \ref{bbcode}
 
-The idea of the arguments \texttt{lb} and \texttt{ub} are to bound the problem.
+The goal of the arguments \texttt{lb} and \texttt{ub} is to bound the problem.
 This way, I can prove that this function always terminates. To do so, a
 convenient way in Isabelle is to use a \textit{measure}. It is function mapping
 the arguments of the function \texttt{f} that we want to prove its termination
-to natural numbers. If we prove that at each recursive call the measure strictly
-decreases, then there is no way that a infinite sequence of recursive calls can
-happen and the function always terminates. The measure I used is the following:
-$$\max\left(
-       0,
-       \sum_{x_i \in \mathtt{Is}} (\mathtt{ub}(x_i) - \mathtt{lb}(x_i))
-       \right)$$
-% Should I give more details about the termination prove or is it enough?
+to natural numbers. If we prove that at each recursive call the measure
+strictly decreases, then there is no way that a infinite sequence of recursive calls
+can happen and the function always terminates. The measure I used is the
+following:
+$$
+\max\left(
+     0,
+     \sum_{x_i \in \mathtt{Is}} (\mathtt{ub}(x_i) - \mathtt{lb}(x_i))
+     \right)
+$$
 
 Once the termination proved, I proved correctness properties, the first is that
 if a valuation is found it satisfies the MILP:
@@ -796,32 +790,35 @@ where the Isabelle notation $v \vDash_{mcs} (S, I)$ is equivalent to notation
 $v \vDash_I S$.
 
 The goal now is to use the theorem \ref{small-milp} to have a formalized
-complete solver for MILPs. The problem is that linear constraints are coded with
-a datastructure called \textit{linear polynomials} that should be converted to
-the form of vectors and matrices to use the theorem.
+complete solver for MILPs. The problem is that linear constraints are coded
+with a datastructure called \textit{linear polynomials} that should be
+converted to the form of vectors and matrices to use the theorem.
 
+%TODO: remove this paragraph?
 To do so, linear constraints are converted to the type \texttt{Le\_Constraint}
 that is more practical to use, as the description of different inequalities uses
 a sum-type with only two constructors instead of ten for the type
 \texttt{constraint}. Indeed, I first tried to express the conversion using
 directly the standard type, and when I switched to \texttt{Le\_Constraint}'s, I
 considerably simplified the proofs (around 80 lines of proof were saved).
-The conversion theorem is the following:
-\Snippet{mats-vecs-of-constraints}
+%The conversion theorem is the following:
+%\Snippet{mats-vecs-of-constraints}
 
-After some work to convert rational constraints to integral constraints,
-I could define a function \texttt{compute\_bound} that maps a list of
-constraints to the desired bound and prove that:
+Afterwards, some work to convert rational constraints to integral constaints
+is needed. 
+I use it to define a function \texttt{compute\_bound} that maps a list of
+constraints to the desired bound, and prove that:
 \Snippet{compute-bound}
 
-Finally, I was able to state a complete MILP-solver based on the
+Finally, I am able to state a complete MILP-solver based on the
 branch-and-bound algorithm:
 \Snippet{branch-and-bound}
-
 and to prove its correction:
 \Snippet{branch-and-bound-sat}
 \Snippet{branch-and-bound-unsat}
 
+% TODO: give a more precise line count
+In total, the formalization of this algorithm takes around 1000 lines of code.
 
 \section{Future Work}
 Even if I have written and proved the correctness of a branch-and-bound
@@ -840,26 +837,97 @@ computation (including the preprocessing steps) is always made from scratch.
 The problem is that in the current interface, the internal state is initialized
 with a (finite) list of constraints, and only constraints of this list can be
 asserted. To efficiently use the incrementality, this interface should be
-rewritten so that arbitrary constraints could be asserted.
+rewritten so that arbitrary constraints can be asserted.
 
 \subsection{Gomory Cuts}
 
-Suppose that a valuation $v$ such that $v \vDash_I S$ has been found but that
-$v \not\vDash_I S$. A \textit{cut} is a
+Suppose that a valuation $v$ such that $v \vDash S$ has been found but that
+$v \not{\vDash_I} S$. A \textit{cut} is a
 linear constraint $c$ such that $v$ does not satisfy $c$ but for every
 mixed-integer solution $v \vDash_I S$, $v$ satisfies $c$. The goal of a cut is
 to prune non-integral solutions of the problems without affecting integral
 solutions.
 
-A method to obtain cuts is described in \cite[Section 4]{Dutertre2006}. These
-cuts are called \textit{Gomory cuts}. The combination of the branch-and-bound
-algorithm with cut generation is called \textit{branch-and-cut} and a dramatic
-acceleration of the branch-and-bound algorithm has been observed.
+For example, let us take the following problem:
+\begin{equation}
+  \label{cuteq}
+  \left\{
+  \begin{array}{c}
+    10x + 2y \geqslant 5 \\
+    10x - 2y \leqslant 5
+  \end{array}
+  \right|
+  x, y \in \ints
+\end{equation}
+$(\frac{1}{2}, 0)$ is a non-integral solution. But we can remark that the
+following constraint $$y \geqslant \frac{5}{2}$$ is satisfied by every integral
+solution of the problem, but not by $(\frac{1}{2}, 0)$. We will call this
+constraint the \textit{cut}. A graphical representation can be found in figure
+\ref{cutfig}.
+
+\begin{figure}[h]
+  \label{cutfig}
+  \centering
+
+  \begin{tikzpicture}
+    \coordinate (lextr) at (-1.5, -0.5);
+    \coordinate (rextr) at (2.5, 4.5);
+    \draw[style=help lines, thin] (lextr) grid (rextr);
+    \draw[very thick, ->] (-1.5, 0) -- (2.5, 0) node[anchor=west] {x};
+    \draw[very thick, ->] (0, -0.5) -- (0, 4.5) node[anchor=south] {y};
+    \foreach \x in {-1, 0, ..., 2} {
+      \foreach \y in {0, 1, ..., 4} {
+        \node[draw, circle, fill=black, inner sep=0.85pt] at (\x, \y) {};
+      }
+    }
+
+    \coordinate (A) at (-0.4, 4.5);
+    \coordinate (B) at (0.5, 0);
+    \coordinate (C) at (1.4, 4.5);
+    \coordinate (A') at (0.6, -0.5);
+    \coordinate (C') at (0.4, -0.5);
+    \coordinate (A'') at (0, 2.5);
+    \coordinate (C'') at (1, 2.5);
+    \coordinate (D) at (-1.5, 2.5);
+    \coordinate (E) at (2.5, 2.5);
+
+    \draw (A) -- (A');
+    \draw (C) -- (C');
+    \draw[very thick, dashed] (D) -- (E);
+    \node[draw, fill=black] at (B) {};
+
+    \fill[fill=blue, opacity=0.5]
+      (A) -- (A'') -- (C'') -- (C) -- cycle;
+    \fill[fill=blue, opacity=0.1]
+      (A'') -- (B) -- (C'') -- cycle;
+  \end{tikzpicture}
+
+  \caption{Graphical representation of the solutions of the problem
+    \ref{cuteq}. The solutions lie in the blue and light blue area. More
+    precisely, the solutions satisfying the cut lie in the red area.}
+\end{figure}
+
+A general method to obtain cuts is described in \cite[Section 4]{Dutertre2006}.
+These cuts are called \textit{Gomory cuts}. The combination of the
+branch-and-bound algorithm with cut generation is called
+\textit{branch-and-cut} and a dramatic acceleration of the branch-and-bound
+algorithm has been observed.
 %TODO: find a reference.
 
-% TODO: give an example
+It is planned to incorporate Gomory cuts in this branch-and-bound algorithm,
+and to prove its correction. Like in the previous section, it would
+be useful to extend the following interface so that arbitrary constraints (such
+as Gomory cuts) can be asserted.
 
 \subsection{Finalization}
+To finish the work, the branch-and-cut function should be extended to an
+incremental interface similar to the existing interface for linear problems so
+that it could be used efficiently by a SMT-solver.
+
+Also, René have already started to export the code to do measure its execution
+time. It could be interesting to measure to difference obtained by each of the
+previously described optimizations. Finally, it is planned to publish this
+work in AFP.
 
 \section*{Conclusion}
 During this internship, I contributed to formalize in Isabelle results about
@@ -867,9 +935,9 @@ linear inequalities with René Thiemann and Ralph Bottesch. I used these results
 to prove the termination of a branch-and-bound algorithm to solve MILPs. I also
 proved the correctness of this algorithm.
 
-This is the first step to extending a linear arithmetic solver to mixed-integer
-linear arithmetic, with an incremental interface so that it could be plugged in
-a SMT-solver.
+This is the first step to extending a verified linear arithmetic solver to
+mixed-integer linear arithmetic, with an incremental interface so that it could
+be plugged in a SMT-solver.
 
 \bibliographystyle{plain}
 \bibliography{sources}
@@ -893,20 +961,20 @@ with
 using DPLL($T$). First, let us interpret $\Phi$ as a SAT-formula and find an
 valuation that satisfies it. For example:
 \begin{itemize}
-  \item Arbitrarily affects the variable $A$ to 1. Asserts the atom $A$. Get a
-    checkpoints $c_1$.
+  \item Arbitrarily affect the variable $A$ to 1. Assert the atom $A$. Get a
+    checkpoint $c_1$.
   \item To solve the clause $(\neg A \vee B)$, we must affect the variable $B$
-    to 1. Asserts the atom $B$. Get a checkpoint $c_2$.
-  \item Affects the variable $C$ to 1. Asserts the atom $C$. Get a checkpoint
+    to 1. Assert the atom $B$. Get a checkpoint $c_2$.
+  \item Affect the variable $C$ to 1. Assert the atom $C$. Get a checkpoint
     $c_3$.
   \item To solve the clause $(\neg C \vee D)$, we must affect the variable $D$
-    to 1. Asserts the atom $D$. Get a checkpoint $c_4$.
+    to 1. Assert the atom $D$. Get a checkpoint $c_4$.
 \end{itemize}
 
 Now, we have found an valuation that satisfies $\Phi$ interpreted as a
 SAT-formula. But we need to check if this valuation is compatible with an
 assignment in the theory of linear arithmetic. It means that we need to find an
-assignment to the conjuction $A \wedge B \wedge C \wedge D$, which is equivalent
+assignment to the conjunction $A \wedge B \wedge C \wedge D$, which is equivalent
 to the system:
 \begin{displaymath}
   \left\{
@@ -922,24 +990,24 @@ to the system:
 But this system has no solution. The procedure $\icheck$ may retun that the
 constraints $A$, $B$ and $C$ are mutually incompatible. As these three
 constraints cannot be satisfied simultaneously, an assignement that satisfies
-$\Phi$ must violate at least one of these constraints, so we can deduce that the
-clause $(\neg A \vee \neg B \vee \neg C)$ is true. Instead of solving $\Phi$, we
-will try to solve $\Phi' = \Phi \wedge (\neg A \vee \neg B \vee \neg C)$. We
-need to backtrack, but we can notice that we could bactrack just before
-the choice to affect $C$ to 1 was made. So let us backtrack to $c_2$, where only
-the variables $A$ and $B$ are affected.
+$\Phi$ must violate at least one of these constraints, so we can deduce that
+the clause $(\neg A \vee \neg B \vee \neg C)$ is true. Instead of solving
+$\Phi$, we will try to solve the formula
+$$\Phi' = \Phi \wedge (\neg A \vee \neg B \vee \neg C)$$
+We need to backtrack, but we can notice that we could bactrack just before
+the choice to affect $C$ to 1 was made. So let us backtrack to $c_2$, where
+only the variables $A$ and $B$ are affected.
 
 \begin{itemize}
   \item To solve the clause $(\neg A \vee \neg B \vee \neg C)$, we must affect
-    the variable $C$ to 0. Asserts the atom $\neg C$. Get a checkpoint $c'_3$.
+    the variable $C$ to 0. Assert the atom $\neg C$. Get a checkpoint $c'_3$.
   \item To solve the clause $(\neg A \vee C \vee D)$, we must affect the
-    variable $D$ to 1. Asserts the atom $D$. Get a checkpoint $c'_4$.
+    variable $D$ to 1. Assert the atom $D$. Get a checkpoint $c'_4$.
 \end{itemize}
 
 Again, we have a valuation that satisfies $\Phi'$ interpreted as a
-SAT-formula. We have to find an assignement that satisfies the conjuction
-$A \wedge B \wedge \neg C \wedge D$, which is equivalent
-to the system:
+SAT-formula. We have to find an assignement that satisfies the conjunction
+$A \wedge B \wedge \neg C \wedge D$, which is equivalent to the system:
 \begin{displaymath}
   \left\{
   \begin{array}{ccccr}
@@ -964,7 +1032,7 @@ To understand the code:
     constraints $x_i \geqslant \mathtt{lb}~x_i$ and
     $x_i \leqslant \mathtt{ub}~x_i$ for all element $x_i$ of the list
     \texttt{Is}.
-  \item \texttt{@} is the symbol used for list concatenation. In this case,
+  \item `` \texttt{@} '' is the symbol used for list concatenation. In this case,
     \linebreak \texttt{cs @ bounds\_to\_constraints Is lb ub} is the list
     composed by the constraints of \texttt{cs} and of
     \texttt{bounds\_to\_constraints~Is~lb~ub}.
