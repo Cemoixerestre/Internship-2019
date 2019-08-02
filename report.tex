@@ -720,8 +720,6 @@ $$\mathtt{lincomb\_list}~c~\mathtt{Vs} = \sum_{i = 0}^{l-1} c(i) \cdot v_i$$
 where $\mathtt{Vs} = [v_0, ..., v_{l-1}]$ is a list of vectors and $c$ is a
 function mapping integers to scalars. 
 
-% TODO: with the previous paragraphs, I give the impression that there are only
-% advantages of using lincomb_list. It makes me confused.
 This way, the distributivity of a linear map to a linear combination can be
 expressed in a direct manner. To use the advantages of both definitions, we
 usually define our concepts in two manners: one using sets and the other using
@@ -746,11 +744,10 @@ me around 300 lines of code to prove the previous result.
 
 \subsection{Formalization of a Branch-and-Bound Algorithm}
 \label{forbb}
-%TODO: add a link to a repository containing the code
 
-The next part is the formalization of a branch-and-bound algorithm, as described
-in the section \ref{bbdescr}. The idea was to state and prove the correctness
-of a simple algorithm, without any optimization for the moment.
+The next part is the formalization of a branch-and-bound algorithm, as
+described in the section \ref{bbdescr}. The idea was to state and prove the
+correctness of a simple algorithm, without any optimization for the moment.
 
 I first developped a function $\mathtt{branch\_and\_bound\_core}$ that takes
 four arguments:
@@ -794,7 +791,6 @@ complete solver for MILPs. The problem is that linear constraints are coded
 with a datastructure called \textit{linear polynomials} that should be
 converted to the form of vectors and matrices to use the theorem.
 
-%TODO: remove this paragraph?
 To do so, linear constraints are converted to the type \texttt{Le\_Constraint}
 that is more practical to use, as the description of different inequalities uses
 a sum-type with only two constructors instead of ten for the type
@@ -817,8 +813,11 @@ and to prove its correction:
 \Snippet{branch-and-bound-sat}
 \Snippet{branch-and-bound-unsat}
 
-% TODO: give a more precise line count
-In total, the formalization of this algorithm takes around 1000 lines of code.
+In total, the formalization of this algorithm takes 1062 lines of code. You can
+find the state of my work at the end of this internship in this repository:
+\url{https://github.com/Cemoixerestre/MILP-Isabelle}. Notice that this is only
+a temporary repository, this work is not finished as you will see in the
+next section.
 
 \section{Future Work}
 Even if I have written and proved the correctness of a branch-and-bound
@@ -911,8 +910,7 @@ A general method to obtain cuts is described in \cite[Section 4]{Dutertre2006}.
 These cuts are called \textit{Gomory cuts}. The combination of the
 branch-and-bound algorithm with cut generation is called
 \textit{branch-and-cut} and a dramatic acceleration of the branch-and-bound
-algorithm has been observed.
-%TODO: find a reference.
+algorithm has been observed \cite{Ongoing2012}. %TODO: reformulate
 
 It is planned to incorporate Gomory cuts in this branch-and-bound algorithm,
 and to prove its correction. Like in the previous section, it would
