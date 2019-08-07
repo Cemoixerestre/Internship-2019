@@ -52,7 +52,7 @@ Linear Arithmetic}
 
 \maketitle
 
-This work has been done in an internship between may and July 2019
+This work has been done in an internship between May and July 2019
 in the Department of Computer Science
 of the University of Innsbruck, under the supervision of René Thiemann, in the
 Computational Logic group.
@@ -71,8 +71,8 @@ Moreover, there is the language \textit{Isar} that can be used to conduct proofs
 in a structured way.
 
 For example, here is a proof of the Cantor Theorem (the fact that there is no
-surjection from a set $A$ to its powerset), taken from
-\cite[Section 5.1]{ConcreteSemantics}
+surjection from a set $A$ to its powerset)
+\footnote{adapted from \cite[Section 5.1]{ConcreteSemantics}},
 with Isabelle and Isar:
 \Snippet{cantor}
 
@@ -81,7 +81,7 @@ The outline of the proof is the following:
   \item We assume that there exist a surjective function $f$ from $A$ to
     its powerset.
   \item We deduce that there exists an element $a$ of $A$ such that
-    $f(a) = \{x~|~x \notin f(x)\}$
+    $$f(a) = \{x~|~x \notin f(x)\}$$
   \item But from the following fact we can deduce that both $a \in f(a)$ and $a
     \notin f(a)$ which is a contradiction (represented by the proposition
     $\mathtt{False}$).
@@ -98,23 +98,25 @@ correctness and exporting its code.
 
 Let $a_0, ..., a_{n-1}, b$ be real constants, $x_0, ..., x_{n-1}$ be
 variables and ${\bowtie} \in \{\leqslant,\geqslant,<,>\}$ be a comparison
-operator. We can then define a linear constraint $c$:
+operator. With these parameters, we can define a linear constraint $c$:
 
 $$\sum_{i < n} a_i x_i \bowtie b$$
 
-An assignement $v$ is a function that maps variables to real numbers.
-We say that the assignement $v$ satisfies the constraint $c$ (or $v \vDash c$)
+An assignment $v$ is a function that maps variables to real numbers.
+We say that the assignment $v$ satisfies the constraint $c$ (or $v \vDash c$)
 if $$\sum_{i < n} a_i v(x_i) \bowtie b$$
 These formulas define the theory of \textit{linear arithmetic}.
 
 If $C$ is a finite set of linear constraints,
-we will use the notation $v \vDash C$ for $\forall c \in C.~v \vDash c$. The
-problem of finding such an assignement is called a \textit{linear problem}.
+we will use the notation $v \vDash C$ for $\forall c \in C.~v \vDash c$, and
+say that the assignment $c$ satisfies the set of constraints $C$. The
+problem of finding such an assignment is called a
+\textit{linear problem}.
 
 Note that we are only interested in the decision problem (\textit{i.e} checking
 if a set of constraints admits a satisfying assignment), not the optimization
 problem (\textit{i.e} finding an assignment satisfying the constraints that
-maximizes a linear objective function). 
+maximizes an objective function). 
 
 The other theory we will study is the theory of \textit{mixed-integer linear
 arithmetic}. A mixed-integer linear problem (MILP) consists of a linear
@@ -127,8 +129,8 @@ For example:
 \begin{displaymath}
   \left\{
   \begin{array}{l}
-    x + y \geqslant 3 \\
-    y - x < 2 \\
+    3 + y \geqslant 3 \\
+    4 - x < 2 \\
   \end{array}
   \right|
   x \in \ints
@@ -138,22 +140,38 @@ is a MILP.
 More formally, if $S$ in a set of linear constraints and $I$ the set of
 variables that are required to be integral, if $v$ is a valuation, I will use
 the notation $$v \vDash_I S$$ for $v \vDash S$ and
-$\forall x_i \in I.~v(x_i) \in \ints$.
+$\forall x_i \in I.~v(x_i) \in \ints$. We will say that the assignment $v$
+is a solution to the MILP characterized by the set of constraints $C$ and the
+set of integral variables $I$.
+
+\textbf{Remark:} Linear problems with rational coefficients are
+polynomial \cite[Section 13, 18]{Schrijver1998}, while ILPs are NP-complete.
+The NP-hardness of ILPs (and therefore MILPs)
+can be easily shown by reduction from SAT to 0-1 ILPs. The
+inclusion in the class NP is more involved to prove, but a sketch of proof will
+be given later.
+
+Intuitively, it suggests that it is harder to solve MILPs efficiently than
+linear problems. Nevertheless, we will use Simplex-based algorithms (which are
+not known to be polynomial in the worst case) to solve linear problems. More
+generally, we are more interested by algorithms efficient in practice than
+algorithms optimal in the worst-case.
+
 
 \subsection{SMT Solving}
 \label{smt}
 Let $T$ be a quantifier-free theory. A $T$-solver is an algorithm that checks
 if a finite set of atoms over $T$ can be satisfied. For linear or mixed-integer
 linear arithmetic, atoms are linear constraints and the work of a $T$-solver
-consists in deciding whether there exists an assignement
+consists in deciding whether there exists an assignment
 that satisfies a set of constraints.
 
 Let $\Phi$ be a boolean formula of atoms of the theory $T$. We may want to find
-an assignement $v$ that satisfies $\Phi$, or to know if no such assignement
+an assignment $v$ that satisfies $\Phi$, or to know if no such assignment
 exists. This problem is called \textbf{Satisfiability Modulo Theory} (SMT).
 
 For example, an SMT instance based on linear arithmetic would be:
-$$(x + y > 0 \vee z \leqslant 1) \wedge \neg (x \geqslant 0)$$
+$$(2x + y > 0 \vee z \leqslant 1) \wedge \neg (x \geqslant 0)$$
 
 An efficient procedure to solve SMT problems is DPLL($T$)
 \cite[Section 3.2]{Decision2016},
@@ -164,7 +182,7 @@ description of the procedure:
     Run a SAT-solver to find a valuation of each variable to 0 or 1 that
     satisfies this SAT-formula.
   \item From this affectation, derive a conjunction of atoms. Run a
-    $T$-solver to find an assignement that satisfies this conjunction.
+    $T$-solver to find an assignment that satisfies this conjunction.
   \item If an assignment $v$ is found, return $v$
   \item If no assignment is found, from this conjunction find a contradicting
     subset of atoms. From this subset, derive a new constraint, add it to the
@@ -177,7 +195,7 @@ $T$-solver implements the following interface:
   \item $\iassert{\alpha}$: Asserts the atom $\alpha$. It is added to the set of
     $T$-atoms the should be satisfied.
   \item $\icheck$: Runs a $T$-solver to find an assignment to the set of
-    asserted atoms. If such an assignement is found, returns it. Otherwise,
+    asserted atoms. If such an assignment is found, returns it. Otherwise,
     returns a subset of inconsistent asserted atoms.
   \item $\icheckpoint$: Returns a checkpoint $c$ that contains all the necessary
     information to backtrack to the current state.
@@ -185,29 +203,29 @@ $T$-solver implements the following interface:
     $c$.
 \end{itemize}
 
-%TODO: find a better explanation of the term "incremental interface"
-We will call such an inteface an \textit{incremental interface} as it allows us
+We will call such an interface an \textit{incremental interface} as it allows us
 to add or remove constraints without having to do all the computation from the
-begining. A similar description can be found in \cite{Dutertre2006} and
+beginning. A similar description can be found in \cite{Dutertre2006} and
 \cite{Thiemann2018,BHT2019}.
 
 An example of an execution of DPLL($T$) is given in appendix \ref{dpll}.
 
-Dutertre and de Moura have proposed a Simplex-based solver to solve linear
-arithmetic \cite{Dutertre2006}. A partial version of this algorithm has been
+Dutertre and de Moura have proposed a Simplex-based solver with an incremental
+interface to solve linear arithmetic problems
+\cite{Dutertre2006}. A partial version of this algorithm has been
 formalized in Isabelle by Spasić and Marić \cite{Spasic2012} and extended to
 use the incremental interface by Ralph Bottesch, Max Haslbeck and René Thiemann
-\cite{Thiemann2018,BHT2019}. The ultimate goal of this internship is to extend the
-previous work to solve MILPs.
+\cite{Thiemann2018,BHT2019}. The ultimate goal of this internship is to extend
+the previous work to mixed-integer linear arithmetic.
 
 \section{Resolution of Mixed-Integer Linear Problems}
-In this section, I will describe an algorithm to solve MILPs and the mathematics
-required to prove its correctness.
+In this section, I will describe a procedure to solve MILPs and the
+mathematics required to prove its correctness.
 
 \subsection{The Branch-and-Bound Algorithm}
 \label{bbdescr}
-% TODO: give a reference?
-Branch-and-bound is a simple algorithm to solve ILPs and MILPs. Though it can
+Branch-and-bound is a simple algorithm to solve ILPs and MILPs
+\cite[Section 5.3]{Decision2016}. Though it can
 be stated as an optimization algorithm, we will focus on its formulation for
 decision problems.
 
@@ -217,8 +235,7 @@ following:
 \begin{itemize}
   \item Search a valuation $v$ such that $v \vDash S$. If no solution exists,
     return \cunsat{}.
-  \item If for all $x_i \in I$, $v(x_i) \in \ints$, then $v \vDash_I S$.
-    Return $v$.
+  \item If for all $x_i \in I$, $v(x_i) \in \ints$,  return $v$.
   \item If there exists a variable $x_i \in I$ such that
     $v(x_i) \notin \ints$, we can remark that for all solution of this
     MILP, either the constraint $x_i \leqslant \lfloor v(x_i) \rfloor$ 
@@ -263,9 +280,9 @@ let us examine the following ILP:
   x, y \in \ints
 \end{equation}
 
-This problem has no solution, and its relaxation (that is the problem composed
-by the linear inequalities, without the integrality constaints) is unbounded, as
-shown in figure \ref{bbloop}. Here is a possible execution of the
+This problem has no solution, and its relaxation -- that is the problem
+composed by the linear inequalities, without the integrality constaints -- is
+unbounded, as shown in figure \ref{bbloop}. Here is a possible execution of the
 branch-and-bound algorithm on this problem:
 \begin{itemize}
   \item Obtain the solution $(\frac{1}{3}, 0)$. The variable $x$ is not
@@ -312,29 +329,30 @@ branch-and-bound algorithm on this problem:
   \end{tikzpicture}
 
   \label{bbloop}
-  \caption{Graphical representation of the solutions of the problem
+  \caption{Solutions of the problem
            \ref{pbloop}. The solutions of the relaxation lie in the red area.}
 \end{figure}
 
 In this case, the problem is unbounded and makes the branch-and-bound algorithm
-loop. This is why we will try to add constraints of the form
-$$-B \leqslant x_i \leqslant B$$
-for all variable $x_i$ to bound the problem, at the condition that
-the bounded problem admits a solution if and only if the original problem admits
-a solution. This is what we are going to see in the next section.
+loop. This is why we will try to add to the input problem $S$ constraints of
+the form $$-B \leqslant x_i \leqslant B$$
+for all variable $x_i$ to obtain a bounded problem $S'$, at the condition that
+the bounded problem $S'$ is satisfiable if and only if the problem $S$
+is satisfiable \footnote{We will informally call a solution of such a bounded
+problem a \textit{solution of small size.}}. 
+This is what we are going to see in the next section.
 
 \subsection{Obtaining Bounds for ILPs and MILPs}
 \label{schrijverbnd}
-First of all, let us remark that if a linear problem contains only equalities and 
-non-strict inequalities, 
-it could be put in the form:
+First of all, let us remark that if a linear problem contains only 
+large inequalities, it could be put in the form:
 
 \begin{displaymath}
   \left\{
-  \begin{array}{cccccl}
-    a_{11} x_1 & + & ...    & + & a_{1n} x_n & \leqslant b_1 \\
-               &   & \ddots &   &            &               \\
-    a_{p1} x_1 & + & ...    & + & a_{pn} x_n & \leqslant b_p \\
+  \begin{array}{ccccccl}
+    a_{11} x_1 & + & ...    & + & a_{1n} x_n & \leqslant & b_1 \\
+               &   & \ddots &   &            &           &     \\
+    a_{p1} x_1 & + & ...    & + & a_{pn} x_n & \leqslant & b_p \\
   \end{array}
   \right.
 \end{displaymath}
@@ -352,7 +370,7 @@ definitions and results can be found in Schrijver's book
 \cite[Sections 7 and 16]{Schrijver1998}.
 
 \begin{definition}[Finitely Generated Cone]
-  A set of points $C$ is a \textup{finitely generated cone}
+  A set of points $C$ is a \textsl{finitely generated cone}
   \ifff{} $C = \cone~\{x_0, ..., x_{n-1}\}$ where
   $$\cone~\{x_0, ..., x_{n-1}\} =
       \left\{\sum_{i=0}^{n-1} \lambda_i x_i~|~
@@ -362,7 +380,7 @@ definitions and results can be found in Schrijver's book
 \end{definition}
 
 \begin{definition}[Polyhedral Cone]
-  A set of points $C$ is a \textup{polyhedral cone}
+  A set of points $C$ is a \textsl{polyhedral cone}
   \ifff{} $C = \{x~|~Ax \leqslant 0\}$ for some matrix $A$.
 \end{definition}
 
@@ -371,7 +389,7 @@ definitions and results can be found in Schrijver's book
 \end{theorem}
 
 \begin{definition}[Polyhedron]
-  A set of points $P$ is a \textup{convex polyhedron} \ifff{}
+  A set of points $P$ is a \textsl{convex polyhedron} \ifff{}
   $$P = \{x~|~Ax \leqslant b\}$$
   for some matrix A and vector b.
 \end{definition}
@@ -380,7 +398,7 @@ Note that a polyhedron could be interpreted as the set of solutions of a linear
 problem with only non-strict inequalities.
 
 \begin{definition}[Polytope]
-  A set of points $P$ is a \textup{polytope} \ifff{} it is the convex hull of a
+  A set of points $P$ is a \textsl{polytope} \ifff{} it is the convex hull of a
   finite set $C = \{x_0, ..., x_{m-1}\}$, \textit{i.e}
   $$P = \left\{
     \sum_{i=0}^{m-1} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \geqslant 0
@@ -398,7 +416,7 @@ problem with only non-strict inequalities.
 To illustrate this theorem, let us take the following problem:
 \begin{equation} \label{eqdecomp}
   \left\{
-  \begin{array}{ccccc}
+  \begin{array}{rcccc}
     -6x & + & 2y & \leqslant & 1  \\
     3x  & + & 2y & \geqslant & 11 \\
         &   & 2y & \geqslant & 1  \\
@@ -407,10 +425,9 @@ To illustrate this theorem, let us take the following problem:
   \right.
 \end{equation}
 
-As we have seen, the set of the solutions of this problem is a polyhedron. On
-the figure \ref{figdecomp}, the polyhedron is represented by the red and blue
-areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
-($\cone~\{u, v\}$).
+According to the theorems, the set of the solutions of this problem is a
+polyhedron. The decomposition of this polyhedron is represented in figure
+\ref{figdecomp}.
 
 \begin{figure}[h]
   \label{figdecomp}
@@ -446,7 +463,10 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
   \end{tikzpicture}
 
   \caption{Decomposition of the polyhedron defined by the problem
-           \ref{eqdecomp}}
+           \ref{eqdecomp}. The polyhedron is represented by the
+           red and blue areas. As we can see, it is the sum of a polytope
+           (the red triangle) and a cone ($\cone~\{u, v\}$).
+          }
 \end{figure}
 
 \begin{corollary}
@@ -454,11 +474,11 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
 \end{corollary}
 
 \begin{definition}[Integer Hull]
-  Given a polyhedron $P$, the \textup{integer hull} $P_I$ is the convex hull of
+  Given a polyhedron $P$, the \textsl{integer hull} $P_I$ is the convex hull of
   the integral vectors of $P$, i.e $P_I = \hull (P \cap \ints^n\}$.
 \end{definition}
 
-\begin{theorem}[Meyer (1974)]
+\begin{theorem}[Meyer, 1974]
 \label{meyer theorem}
   For any rational polyhedron $P$, $P_I$ is a polyhedron. Moreover, if
   $P = Q + C$ with $Q$ a polytope and $C$ a cone, then there exists a polytope
@@ -486,16 +506,15 @@ areas. As we can see, it is the sum of a polytope (the red triangle) and a cone
   is integral, and as $\sum_{i<n} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$
   is contained in $B$:
   $$x - \sum_{i<n} \lfloor \lambda_i \rfloor y_i \in (Q + B)_I$$
-  Finally: $x \in (Q + B)_I + C$
+  Finally: $$x \in (Q + B)_I + C$$
 
   $(Q + B)$ is bounded, so $(Q + B)_I$ is the convex hull of a finite set, it is
   a polytope. If we take $Q' = (Q + B)_I$, we have the result.
 \end{proof}
 
 A graphical representation of this proof is given in figure
-\ref{integer_hull_decomp}. With again the polytope defined by the problem
-\ref{eqdecomp}, the set boundary of the set $(Q + B)$ is represented
-in red, $(Q + B)_I$ is represented in green. As we can see, $(Q + B)_I + C$ (the
+\ref{integer_hull_decomp}, with again the polytope defined by the problem
+\ref{eqdecomp}. As we can see, $(Q + B)_I + C$ (the
 green and yellow areas) is exactly the integer hull of the polyhedron.
 
 \begin{figure}[h]
@@ -558,7 +577,8 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
     \draw[red, thick, dashed, ->] (4.5, 3.5) -- (D'');
     \draw[red, thick, dashed] (B) -- (D);
     \fill[fill=yellow, opacity=0.5]
-      (A') -- (J) -- (I) -- (P) -- (O) -- (N) -- (M) -- (E') -- (extr) -- cycle;
+      (A') -- (J) -- (I) -- (P) -- (O) -- (N) -- (M) -- (E') -- (extr)
+           -- cycle;
     \draw[very thick, fill=green, fill opacity=0.5]
       (I) -- (J) -- (K) -- (L) -- (M) -- (N) -- (O) -- (P) -- cycle;
     \draw[red, very thick]
@@ -566,29 +586,45 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
   \end{tikzpicture}
 
   \caption{Decomposition of the integer hull of the polytope defined by the
-           problem \ref{eqdecomp}}
+           problem \ref{eqdecomp}.
+           The boundary of the set $(Q + B)$ is represented
+           in red and $(Q + B)_I$ is represented in green.}
 \end{figure}
 
 \textbf{Remark:}
 Using the notations of the previous proof:
-$$P \cap \ints^n \neq \emptyset \Longleftrightarrow
+\begin{displaymath}
+  P \cap \ints^n \neq \emptyset \Longleftrightarrow
   P_I \neq \emptyset            \Longleftrightarrow
   (Q + B)_I \neq \emptyset      \Longleftrightarrow
-  (Q + B) \cap \ints^n \neq \emptyset$$
+  (Q + B) \cap \ints^n \neq \emptyset
+\end{displaymath}
 
-% TODO: the following sentence is mathematically unacurate. Rewrite it.
+% TODO: this is incomplete and not very clear
+%Moreover, we can choose a point that is a combination of a linearly independant
+%family of vectors of $\{y_0, ..., y_{s-1}\}$ \footnote{using the fundamental
+%theorem of linear inequalities}. In other words ...
+
 Moreover, we can assume that the vectors $\{y_0, ..., y_{s-1}\}$ are linearly
-independant using the fundamental theorem of linear inequalities, which implies
-that $s \leqslant n$.
+independant
+\footnote{It is natural using the fundamental theorem of inequalities that
+implies that every point of the cone $C$ can be expressed as a non-negative
+linear combination of an independant set of $\{y_0, ..., y_{s-1}\}$. Using
+this, we can prove a similar result in the general case.},
+which implies that $s \leqslant n$.
 
-Finally, if $Q = \hull~\{x_0, ..., x_{k-1}\}$, then for every
-$z \in Q + B$, $z \in [-B, B]^n$ where
+Finally, if $Q = \hull~\{x_0, ..., x_{k-1}\}$, then
+%$$(Q + B) \cap \ints^n \neq \emptyset \Longleftrightarrow
+%  (Q + B) \cap \llbracket -B, B \rrbracket ^ n \neq \emptyset
+%$$
+for every $z \in Q + B$, $z \in [-B, B]^n$
+where
 $$B = \max_{i, j} |x_{ij}| + n \cdot \max_{i, j} |y_{ij}|$$
 
 
 With this remark, what remains to do is to find a bound $B$ that depends on the
 parameters of the problem. To do so, a solution is to generalize the previous
-theorems to bounds. % TODO: find a better formulation
+theorems to incorporate bounds.
 We will use the notation
 $\llbracket a, b \rrbracket$ for the set of integers in the interval $[a, b]$.
 
@@ -647,9 +683,14 @@ encompasses MILPs and strict inequalities.
   $$B = (n + 1)! \cdot m^n$$
 \end{theorem}
 
+\textbf{Remark:} If we take the previously defined bound $B$:
+$$\log B \approx n \log n + n \log m$$
+This way, we can use this bound $B$ to show that the number of bits
+necessary to represent numbers in the interval $\llbracket -B, B \rrbracket$
+is polynomial in the size of the input, and so that ILPs are NP.
+
 \section{Formalization in Isabelle}
-%TODO: Find a better introduction
-As we have presented a method to solve MILPs, we can focus of their
+As we have presented a method to solve MILPs, we can focus on its
 formalization, which has been the main part of the work during this internship.
 It consisted first in the formalization of Schrijver results concerning linear
 inequalities (section \ref{forlineq}), then in the implementation and the proof
@@ -677,8 +718,9 @@ In total, 5551 lines of proofs were written. The work was published in the
 \textit{Archive for Formal Proofs} (AFP), a collection of proof libraries in
 Isabelle \cite{Linear_Inequalities-AFP}.
 
-The formalization follows the outline given in section \ref{schrijverbnd}. For
-example, several theorems have general formulation:
+The formalization follows the outline given in section \ref{schrijverbnd}.
+Several theorems, for example the Farkas-Minkowsky-Weyl theorem, have a general
+formulation:
 \Snippet{farkas-minkowsky}
 and particular formulations including bounds:
 \Snippet{farkas-minkowsky-2}
@@ -686,12 +728,12 @@ where the following Isabelle notations are used:
 \begin{itemize}
   \item $\mathtt{carrier\_vec}~n$ is the set of vectors $\mathbb{K}^n$
     where $\mathbb{K}$ is a field.
-  \item $\mathtt{carrier\_mat}~nr~nc$ is the set of matrices
-    $\mathbb{K}^{nr \times nc}$.
+  \item $\mathtt{carrier\_mat}~n_r~n_c$ is the set of matrices
+    $\mathbb{K}^{n_r \times n_c}$.
   \item $\mathbb{Z}_v$ is the set of integral vectors.
   \item $\mathbb{Z}_m$ is the set of integral matrices.
-  \item $\mathtt{Bounded\_vec}~B$ is the set of vectors with coefficients in the
-    interval $[-B, B]$.
+  \item $\mathtt{Bounded\_vec}~B$ is the set of vectors with coefficients in
+    the interval $[-B, B]$.
   \item $\mathtt{Bounded\_mat}~B$ is the set of matrices with coefficients in
     the interval $[-B, B]$.
   \item $\mathtt{det\_bound}~n~m$ is $n! \cdot m^n$.
@@ -759,6 +801,8 @@ four arguments:
   \item A function \texttt{ub} mapping variables of \texttt{Is} to integral
     upper bounds.
 \end{itemize}
+It returns either $\mathtt{Some}~v$ is a solution $v$ within the bounds is
+found, or $\mathtt{None}$ otherwise.
 The code of this function can be found in appendix \ref{bbcode}
 
 The goal of the arguments \texttt{lb} and \texttt{ub} is to bound the problem.
@@ -847,20 +891,20 @@ mixed-integer solution $v \vDash_I S$, $v$ satisfies $c$. The goal of a cut is
 to prune non-integral solutions of the problems without affecting integral
 solutions.
 
-For example, let us take the following problem:
+For example, let us take the following ILP:
 \begin{equation}
   \label{cuteq}
   \left\{
-  \begin{array}{c}
-    10x + 2y \geqslant 5 \\
-    10x - 2y \leqslant 5
+  \begin{array}{ccccc}
+    2x  & + & 10y & \geqslant & 5 \\
+    -2x & + & 10y & \leqslant & 5
   \end{array}
   \right|
   x, y \in \ints
 \end{equation}
-$(\frac{1}{2}, 0)$ is a non-integral solution. But we can remark that the
-following constraint $$y \geqslant \frac{5}{2}$$ is satisfied by every integral
-solution of the problem, but not by $(\frac{1}{2}, 0)$. We will call this
+$(0, \frac{1}{2})$ is a non-integral solution. But we can remark that the
+following constraint $$x \geqslant \frac{5}{2}$$ is satisfied by every integral
+solution of the problem, but not by $(0, \frac{1}{2})$. We will call this
 constraint the \textit{cut}. A graphical representation can be found in figure
 \ref{cutfig}.
 
@@ -869,25 +913,25 @@ constraint the \textit{cut}. A graphical representation can be found in figure
   \centering
 
   \begin{tikzpicture}
-    \coordinate (lextr) at (-1.5, -0.5);
-    \coordinate (rextr) at (2.5, 4.5);
+    \coordinate (lextr) at (-0.5, -1.5);
+    \coordinate (rextr) at (5.5, 2.5);
     \draw[style=help lines, thin] (lextr) grid (rextr);
-    \draw[very thick, ->] (-1.5, 0) -- (2.5, 0) node[anchor=west] {x};
-    \draw[very thick, ->] (0, -0.5) -- (0, 4.5) node[anchor=south] {y};
-    \foreach \x in {-1, 0, ..., 2} {
-      \foreach \y in {0, 1, ..., 4} {
+    \draw[very thick, ->] (0, -1.5) -- (0, 2.5) node[anchor=south] {y};
+    \draw[very thick, ->] (-0.5, 0) -- (5.5, 0) node[anchor=west] {x};
+    \foreach \x in {0, 1, ..., 5} {
+      \foreach \y in {-1, 0, ..., 2} {
         \node[draw, circle, fill=black, inner sep=0.85pt] at (\x, \y) {};
       }
     }
 
-    \coordinate (A) at (-0.4, 4.5);
-    \coordinate (B) at (0.5, 0);
-    \coordinate (C) at (1.4, 4.5);
-    \coordinate (A') at (0.6, -0.5);
-    \coordinate (C') at (0.4, -0.5);
-    \coordinate (A'') at (0, 2.5);
-    \coordinate (C'') at (1, 2.5);
-    \coordinate (D) at (-1.5, 2.5);
+    \coordinate (A) at (5.5, -0.6);
+    \coordinate (B) at (0, 0.5);
+    \coordinate (C) at (5.5, 1.6);
+    \coordinate (A') at (-0.5, 0.6);
+    \coordinate (C') at (-0.5, 0.4);
+    \coordinate (A'') at (2.5, 0);
+    \coordinate (C'') at (2.5, 1);
+    \coordinate (D) at (2.5, -1.5);
     \coordinate (E) at (2.5, 2.5);
 
     \draw (A) -- (A');
@@ -902,8 +946,8 @@ constraint the \textit{cut}. A graphical representation can be found in figure
   \end{tikzpicture}
 
   \caption{Graphical representation of the solutions of the problem
-    \ref{cuteq}. The solutions lie in the blue and light blue area. More
-    precisely, the solutions satisfying the cut lie in the red area.}
+    \ref{cuteq}. The solutions lie in the blue and light blue areas. More
+    precisely, the solutions satisfying the cut lie in the blue area.}
 \end{figure}
 
 A general method to obtain cuts is described in \cite[Section 4]{Dutertre2006}.
@@ -987,7 +1031,7 @@ to the system:
 
 But this system has no solution. The procedure $\icheck$ may retun that the
 constraints $A$, $B$ and $C$ are mutually incompatible. As these three
-constraints cannot be satisfied simultaneously, an assignement that satisfies
+constraints cannot be satisfied simultaneously, an assignment that satisfies
 $\Phi$ must violate at least one of these constraints, so we can deduce that
 the clause $(\neg A \vee \neg B \vee \neg C)$ is true. Instead of solving
 $\Phi$, we will try to solve the formula
@@ -1004,7 +1048,7 @@ only the variables $A$ and $B$ are affected.
 \end{itemize}
 
 Again, we have a valuation that satisfies $\Phi'$ interpreted as a
-SAT-formula. We have to find an assignement that satisfies the conjunction
+SAT-formula. We have to find an assignment that satisfies the conjunction
 $A \wedge B \wedge \neg C \wedge D$, which is equivalent to the system:
 \begin{displaymath}
   \left\{
@@ -1017,7 +1061,7 @@ $A \wedge B \wedge \neg C \wedge D$, which is equivalent to the system:
   \right.
 \end{displaymath}
 
-$\icheck$ may return the assignement $(x=1, y=2)$. Finally, the formula $\Phi$
+$\icheck$ may return the assignment $(x=1, y=2)$. Finally, the formula $\Phi$
 is satisfiable, and $(x=1, y=2) \vDash \Phi$.
 
 \section{Code of the Core of the Branch-and-Bound Procedure}
