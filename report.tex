@@ -46,7 +46,7 @@
 \title{Internship Report -- Extending a Verified SMT Solver for Mixed-Integer
 Linear Arithmetic}
 \author{Alban Reynaud}
-\date{}
+%\date{}
 
 \begin{document}
 
@@ -64,21 +64,20 @@ Computational Logic group.
 \section*{Introduction}
 In the field of decision problems, the theory of linear arithmetic is
 composed by linear inequialities. Algorithms to solve linear arithmetic
-problems over rationals have been proposed \cite{Dutertre2006},
-and formalized in Isabelle, a proof assistant, in order to have a verified
+problems over rational numbers have been proposed \cite{Dutertre2006},
+and formalized in Isabelle -- a proof assistant -- in order to have a verified
 implementation \cite{Spasic2012, BHT2019, Thiemann2018}. When some variables of
 the problem are required to be integral, we talk about integer or mixed-integer
-linear arithmetic. The goal of this internship is to extend a verified solver
+linear problems. The goal of this internship is to extend a verified solver
 for linear arithmetic to mixed-integer linear arithmetic.
 
-In section \ref{secback}, I will introduce the background to
+In section \ref{secback}, I will introduce the background for
 this work. In section \ref{secresolution}, I will present an algorithm to solve
 mixed-integer linear problems and the mathematics required to proved its
 correctness.
 In section \ref{secformalization}, I will describe the formalization of this
-algorithm in Isabelle. Finally, I will present the road to complete this work
-in section \ref{secfuture} in order to have an efficient formalized solver for
-mixed-integer linear arithmetic.
+algorithm in Isabelle. Finally, I will describe what remains to be done to
+complete this work\ref{secfuture}.
 
 \section{Background}
 \label{secback}
