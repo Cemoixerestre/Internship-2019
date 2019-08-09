@@ -59,20 +59,43 @@ Computational Logic group.
 
 \tableofcontents
 
-\section{Introduction}
+\pagebreak
+
+\section*{Introduction}
+In the field of decision problems, linear arithmetic consists deciding whether
+a set of linear constraints can be satisfied simultaneously
+\cite[Section 5]{Decision2016}. Algorithms to
+solve linear decision problems have been proposed \cite{Dutertre2006},
+and formalized in Isabelle, a proof assistant, in order to have a verified
+implementation \cite{Spasic2012, BHT2019, Thiemann2018}. When some variables of
+the problem are required to be integral, we talk about integer or mixed-integer
+linear arithmetic. The goal of this internship is to extend a verified solver
+for linear arithmetic to mixed-integer linear arithmetic.
+
+In section \ref{secback}, I will introduce the background to
+this work. In section \ref{secresolution}, I will present an algorithm to solve
+mixed-integer linear problems and the mathematics required to proved its
+correctness.
+In section \ref{secformalization}, I will describe the formalization of this
+algorithm in Isabelle. Finally, I will present the road to complete this work
+in section \ref{secfuture} in order to have an efficient formalized solver for
+mixed-integer linear arithmetic.
+
+\section{Background}
+\label{secback}
+
 \subsection{The Isabelle Proof Assistant}
 Isabelle \cite{Isabelle} is a generic proof assistant, and Isabelle/HOL
 (\textit{HOL} is an abbreviation for \textit{Higher Order Logic}) is a
 specialization that is generally used.
 
-%TODO: link the three sentences?
-One of the features of Isabelle is the use of mathematical symbols to make the
-proofs more readable. It also uses automatic provers.
+The features of Isabelle include to use of mathematical symbols to make the
+proof more readable and the use of automatic provers.
 Finally, Isabelle is generally used with the language \textit{Isar} that allow
 us to conduct proofs in a structured way.
 
 For example, here is a proof
-\footnote{adapted from \cite[Section 5.1]{ConcreteSemantics}},
+\footnote{adapted from \cite[Section 5.1]{ConcreteSemantics}}
 of the Cantor Theorem -- the fact that there is no surjection from a set $A$ to
 its powerset -- with Isabelle and Isar:
 \Snippet{cantor}
@@ -180,8 +203,8 @@ An efficient procedure to solve SMT problems is DPLL($T$)
 \cite[Section 3.2]{Decision2016},
 which works as a combination of a SAT-solver and a $T$-solver. Here is a quick
 description of the procedure
-\footnote{An example of an execution of DPLL($T$) is given in appendix
-\ref{dpll}}:
+\footnote{An example of an execution of DPLL($T$) with an incremental interface
+is given in appendix \ref{dpll}}:
 
 \begin{itemize}
   \item Replace every atom by a SAT variable to obtain a SAT formula $\Phi$.
@@ -223,12 +246,11 @@ use the incremental interface by Ralph Bottesch, Max Haslbeck and René Thiemann
 the previous work to mixed-integer linear arithmetic.
 
 \section{Resolution of Mixed-Integer Linear Problems}
-In this section, I will present a procedure to solve MILPs and the
-mathematics required to prove its correctness.
+\label{secresolution}
 
 \subsection{The Branch-and-Bound Algorithm}
 \label{bbdescr}
-To solve ILPs and MILPs, we can use the \textit{branch-and-bound} strategy.
+To solve ILPs and MILPs, we can use the \textit{branch-and-bound} algorithm.
 \cite[Section 5.3]{Decision2016}. Though it is generally stated as
 be stated as an optimization algorithm, we will focus on its formulation for
 decision problems.
@@ -251,12 +273,10 @@ following:
       \item Recursively call branch-and-bound on the constraints set
         $$S \cup \{x_i \leqslant \lfloor v(x_i) \rfloor\}$$
         
-        and $I$.
         If a solution $v'$ is found, return it.
       \item Recursively call branch-and-bound on the constraints set
         $$S \cup \{x_i \geqslant \lceil v(x_i) \rceil\}$$
         
-        and $I$.
         If a solution $v'$ is found, return it.
     \end{itemize}
   \item If after the branching step no solution is found, return \cunsat{}.
@@ -342,7 +362,7 @@ branch-and-bound algorithm on this problem:
 \end{figure}
 
 In this case, the problem is unbounded and makes the branch-and-bound algorithm
-loop. This is why we will try to add to the input problem $S$ constraints of
+loop. This is why we will try to add to the original problem $S$ constraints of
 the form $$-B \leqslant x_i \leqslant B$$
 
 for all variables $x_i$ to obtain a bounded problem $S'$.
@@ -382,7 +402,7 @@ definitions and results can be found in Schrijver's book
 \cite[Sections 7 and 16]{Schrijver1998}.
 
 \begin{definition}[Finitely Generated Cone]
-  A set of points $C$ is a \textsl{finitely generated cone}
+  A set of points $C$ is a \textup{finitely generated cone}
   \ifff{} $C = \cone~\{x_0, ..., x_{n-1}\}$ where
   $$\cone~\{x_0, ..., x_{n-1}\} =
       \left\{\sum_{i=0}^{n-1} \lambda_i x_i~|~
@@ -393,7 +413,7 @@ definitions and results can be found in Schrijver's book
 \end{definition}
 
 \begin{definition}[Polyhedral Cone]
-  A set of points $C$ is a \textsl{polyhedral cone}
+  A set of points $C$ is a \textup{polyhedral cone}
   \ifff{} $C = \{x~|~Ax \leqslant 0\}$ for some matrix $A$.
 \end{definition}
 
@@ -402,7 +422,7 @@ definitions and results can be found in Schrijver's book
 \end{theorem}
 
 \begin{definition}[Polyhedron]
-  A set of points $P$ is a \textsl{convex polyhedron} \ifff{}
+  A set of points $P$ is a \textup{convex polyhedron} \ifff{}
   $$P = \{x~|~Ax \leqslant b\}$$
 
   for some matrix A and vector b.
@@ -412,7 +432,7 @@ Note that a polyhedron could be interpreted as the set of solutions of a linear
 problem with only non-strict inequalities.
 
 \begin{definition}[Polytope]
-  A set of points $P$ is a \textsl{polytope} \ifff{} it is the convex hull of a
+  A set of points $P$ is a \textup{polytope} \ifff{} it is the convex hull of a
   finite set $C = \{x_0, ..., x_{m-1}\}$, \textit{i.e}
   $$P = \left\{
     \sum_{i=0}^{m-1} \lambda_i x_i~|~\lambda_0, ..., \lambda_{m-1} \geqslant 0
@@ -488,7 +508,7 @@ polyhedron. The decomposition of this polyhedron is represented in figure
 \end{corollary}
 
 \begin{definition}[Integer Hull]
-  Given a polyhedron $P$, the \textsl{integer hull} $P_I$ is the convex hull of
+  Given a polyhedron $P$, the \textup{integer hull} $P_I$ is the convex hull of
   the integral vectors of $P$, i.e $P_I = \hull (P \cap \ints^n\}$.
 \end{definition}
 
@@ -610,6 +630,8 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
            in red and $(Q + D)_I$ is represented in green.}
 \end{figure}
 
+\pagebreak
+
 \textbf{Remark:}
 Using the notations of the previous proof:
 \begin{displaymath}
@@ -696,9 +718,13 @@ $$\log B \approx n \log n + n \log m$$
 Hence, the number of bits
 necessary to represent numbers in the interval $\llbracket -B, B \rrbracket$
 is polynomial in the size of the input. Therefore, a small solution $v$ to
-an ILP can be used as a certificate of polynomial size, and ILPs are NP.
+an ILP can be used as a certificate of polynomial size, so ILPs are NP.
+
+\pagebreak
 
 \section{Formalization in Isabelle}
+\label{secformalization}
+
 As we have presented a method to solve MILPs, we can focus on its
 formalization, which has been the main part of the work during this internship.
 It consisted in the formalization of Schrijver results concerning linear
@@ -716,7 +742,6 @@ have been formalized.
 In total, 5551 lines of proofs were written. The work was published in the
 \textit{Archive for Formal Proofs} (AFP), a collection of proof libraries in
 Isabelle \cite{Linear_Inequalities-AFP}.
-
 This was done in collaboration with René Thiemann and Ralph Bottesch:
 \begin{itemize}
   \item René included bounds for the various operations that are performed 
@@ -884,6 +909,8 @@ It can be consulted in at:
 \url{https://github.com/Cemoixerestre/MILP-Isabelle}.
 
 \section{Future Work}
+\label{secfuture}
+
 Even if I have written and proved the correctness of a branch-and-bound
 algorithm, the work is not yet finished. Indeed, some tasks are needed before
 having a more effective formalized MILP-solver with an incremental interface.
@@ -994,6 +1021,8 @@ time. It could be interesting to measure the difference obtained by each of the
 previously described optimizations. Finally, it is planned to publish this
 work in AFP.
 
+\pagebreak
+
 \section*{Conclusion}
 During this internship, I contributed to formalize in Isabelle results about
 linear inequalities with René Thiemann and Ralph Bottesch. I used these results
@@ -1056,7 +1085,7 @@ to the system:
 
 But this system has no solution. The procedure $\icheck$ may retun that the
 constraints $A$, $B$ and $C$ are mutually incompatible. As these three
-constraints cannot be satisfied simultaneously, an assignment that satisfies
+constraints cannot be satisfied simultaneously, any assignment that satisfies
 $\Phi$ must violate at least one of these constraints, so we can deduce that
 the clause $(\neg A \vee \neg B \vee \neg C)$ is true. Instead of solving
 $\Phi$, we will try to solve the formula
