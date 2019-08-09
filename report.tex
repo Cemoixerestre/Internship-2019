@@ -61,33 +61,35 @@ Computational Logic group.
 
 \section{Introduction}
 \subsection{The Isabelle Proof Assistant}
-Isabelle \cite{Isabelle} is a generic proof assistant. Isabelle/HOL
-(abbreviation of \textit{Higher Order Logic}) is a specialization that is
-generally used.
+Isabelle \cite{Isabelle} is a generic proof assistant, and Isabelle/HOL
+(\textit{HOL} is an abbreviation for \textit{Higher Order Logic}) is a
+specialization that is generally used.
 
+%TODO: link the three sentences?
 One of the features of Isabelle is the use of mathematical symbols to make the
 proofs more readable. It also uses automatic provers.
-Moreover, there is the language \textit{Isar} that can be used to conduct proofs
-in a structured way.
+Finally, Isabelle is generally used with the language \textit{Isar} that allow
+us to conduct proofs in a structured way.
 
-For example, here is a proof of the Cantor Theorem (the fact that there is no
-surjection from a set $A$ to its powerset)
+For example, here is a proof
 \footnote{adapted from \cite[Section 5.1]{ConcreteSemantics}},
-with Isabelle and Isar:
+of the Cantor Theorem -- the fact that there is no surjection from a set $A$ to
+its powerset -- with Isabelle and Isar:
 \Snippet{cantor}
 
 The outline of the proof is the following:
 \begin{itemize}
-  \item We assume that there exist a surjective function $f$ from $A$ to
+  \item We assume that there exists a surjective function $f$ from $A$ to
     its powerset.
   \item We deduce that there exists an element $a$ of $A$ such that
     $$f(a) = \{x~|~x \notin f(x)\}$$
-  \item But from the following fact we can deduce that both $a \in f(a)$ and $a
+  \item But from the previous fact we can deduce that both $a \in f(a)$ and $a
     \notin f(a)$ which is a contradiction (represented by the proposition
     $\mathtt{False}$).
 \end{itemize}
-To prove each of these facts, the tactics $\mathtt{blast}$ and
-$\mathtt{auto}$ are used, which internally rely upon automatic provers.
+The tactics $\mathtt{blast}$ and $\mathtt{auto}$
+are used to prove each of these facts. These two tactics rely upon automatic
+provers.
 
 It is also possible to define objects in the functional programming way in
 Isabelle/HOL and to export code. This way, it is possible to have a certified
@@ -98,25 +100,26 @@ correctness and exporting its code.
 
 Let $a_0, ..., a_{n-1}, b$ be real constants, $x_0, ..., x_{n-1}$ be
 variables and ${\bowtie} \in \{\leqslant,\geqslant,<,>\}$ be a comparison
-operator. With these parameters, we can define a linear constraint $c$:
+operator. With these parameters, we can define a linear constraint (or atom)
+$c$:
 
 $$\sum_{i < n} a_i x_i \bowtie b$$
 
 An assignment $v$ is a function that maps variables to real numbers.
 We say that the assignment $v$ satisfies the constraint $c$ (or $v \vDash c$)
 if $$\sum_{i < n} a_i v(x_i) \bowtie b$$
-These formulas define the theory of \textit{linear arithmetic}.
 
+These formulas define a theory that we will call \textit{linear arithmetic}.
 If $C$ is a finite set of linear constraints,
 we will use the notation $v \vDash C$ for $\forall c \in C.~v \vDash c$, and
 say that the assignment $c$ satisfies the set of constraints $C$. The
 problem of finding such an assignment is called a
 \textit{linear problem}.
 
-Note that we are only interested in the decision problem (\textit{i.e} checking
-if a set of constraints admits a satisfying assignment), not the optimization
-problem (\textit{i.e} finding an assignment satisfying the constraints that
-maximizes an objective function). 
+Note that we are only interested in the decision problem --~checking
+that a set of constraints admits a satisfying assignment~-- not the
+optimization problem --~maximizing an objective function while
+satisfying the constraints~--.
 
 The other theory we will study is the theory of \textit{mixed-integer linear
 arithmetic}. A mixed-integer linear problem (MILP) consists of a linear
@@ -125,34 +128,34 @@ MILPs with only rational coefficients (or equivalently with integral
 coefficients). Furthermore, if all the variables are required to be
 integer, the problem is called an \textit{integer linear problem} (ILP).
 
-For example:
+For example, here is a MILP:
 \begin{displaymath}
   \left\{
   \begin{array}{l}
-    3 + y \geqslant 3 \\
-    4 - x < 2 \\
+    3x + y \geqslant 3 \\
+    4y - x < 2 \\
   \end{array}
   \right|
   x \in \ints
 \end{displaymath}
-is a MILP.
 
-More formally, if $S$ in a set of linear constraints and $I$ the set of
-variables that are required to be integral, if $v$ is a valuation, I will use
-the notation $$v \vDash_I S$$ for $v \vDash S$ and
-$\forall x_i \in I.~v(x_i) \in \ints$. We will say that the assignment $v$
+More formally, if $S$ in a set of linear constraints, $I$ is the set of
+variables that are required to be integral and $v$ is a valuation, I will use
+the notation $$v \vDash_I S$$
+
+for $v \vDash S$
+and $\forall x_i \in I.~v(x_i) \in \ints$. We will say that the assignment $v$
 is a solution to the MILP characterized by the set of constraints $C$ and the
 set of integral variables $I$.
 
 \textbf{Remark:} Linear problems with rational coefficients are
 polynomial \cite[Section 13, 18]{Schrijver1998}, while ILPs are NP-complete.
 The NP-hardness of ILPs (and therefore MILPs)
-can be easily shown by reduction from SAT to 0-1 ILPs. The
+can be shown by reduction from SAT to 0-1 ILPs. The
 inclusion in the class NP is more involved to prove, but a sketch of proof will
 be given later.
-
 Intuitively, it suggests that it is harder to solve MILPs efficiently than
-linear problems. Nevertheless, we will use Simplex-based algorithms (which are
+linear problems. Nevertheless, we will use simplex-based algorithms (which are
 not known to be polynomial in the worst case) to solve linear problems. More
 generally, we are more interested by algorithms efficient in practice than
 algorithms optimal in the worst-case.
@@ -161,7 +164,7 @@ algorithms optimal in the worst-case.
 \subsection{SMT Solving}
 \label{smt}
 Let $T$ be a quantifier-free theory. A $T$-solver is an algorithm that checks
-if a finite set of atoms over $T$ can be satisfied. For linear or mixed-integer
+if a finite set of atoms of $T$ can be satisfied. For linear or mixed-integer
 linear arithmetic, atoms are linear constraints and the work of a $T$-solver
 consists in deciding whether there exists an assignment
 that satisfies a set of constraints.
@@ -176,7 +179,10 @@ $$(2x + y > 0 \vee z \leqslant 1) \wedge \neg (x \geqslant 0)$$
 An efficient procedure to solve SMT problems is DPLL($T$)
 \cite[Section 3.2]{Decision2016},
 which works as a combination of a SAT-solver and a $T$-solver. Here is a quick
-description of the procedure:
+description of the procedure
+\footnote{An example of an execution of DPLL($T$) is given in appendix
+\ref{dpll}}:
+
 \begin{itemize}
   \item Replace every atom by a SAT variable to obtain a SAT formula $\Phi$.
     Run a SAT-solver to find a valuation of each variable to 0 or 1 that
@@ -193,7 +199,7 @@ To work efficiently in combination with the SAT-solver, we may assume that the
 $T$-solver implements the following interface:
 \begin{itemize}
   \item $\iassert{\alpha}$: Asserts the atom $\alpha$. It is added to the set of
-    $T$-atoms the should be satisfied.
+    $T$-atoms that should be satisfied.
   \item $\icheck$: Runs a $T$-solver to find an assignment to the set of
     asserted atoms. If such an assignment is found, returns it. Otherwise,
     returns a subset of inconsistent asserted atoms.
@@ -203,12 +209,10 @@ $T$-solver implements the following interface:
     $c$.
 \end{itemize}
 
-We will call such an interface an \textit{incremental interface} as it allows us
-to add or remove constraints without having to do all the computation from the
-beginning. A similar description can be found in \cite{Dutertre2006} and
+We will call such an interface an \textit{incremental interface} as it allows
+us to add or remove constraints without having to do all the computation from
+the beginning. A similar description can be found in \cite{Dutertre2006} and
 \cite{Thiemann2018,BHT2019}.
-
-An example of an execution of DPLL($T$) is given in appendix \ref{dpll}.
 
 Dutertre and de Moura have proposed a Simplex-based solver with an incremental
 interface to solve linear arithmetic problems
@@ -219,13 +223,13 @@ use the incremental interface by Ralph Bottesch, Max Haslbeck and René Thiemann
 the previous work to mixed-integer linear arithmetic.
 
 \section{Resolution of Mixed-Integer Linear Problems}
-In this section, I will describe a procedure to solve MILPs and the
+In this section, I will present a procedure to solve MILPs and the
 mathematics required to prove its correctness.
 
 \subsection{The Branch-and-Bound Algorithm}
 \label{bbdescr}
-Branch-and-bound is a simple algorithm to solve ILPs and MILPs
-\cite[Section 5.3]{Decision2016}. Though it can
+To solve ILPs and MILPs, we can use the \textit{branch-and-bound} strategy.
+\cite[Section 5.3]{Decision2016}. Though it is generally stated as
 be stated as an optimization algorithm, we will focus on its formulation for
 decision problems.
 
@@ -237,7 +241,7 @@ following:
     return \cunsat{}.
   \item If for all $x_i \in I$, $v(x_i) \in \ints$,  return $v$.
   \item If there exists a variable $x_i \in I$ such that
-    $v(x_i) \notin \ints$, we can remark that for all solution of this
+    $v(x_i) \notin \ints$, we can remark that for all solutions of this
     MILP, either the constraint $x_i \leqslant \lfloor v(x_i) \rfloor$ 
     or the constraint $x_i \geqslant \lceil v(x_i) \rceil$ is satisfied.
     
@@ -245,10 +249,14 @@ following:
     the \textit{branching step}):
     \begin{itemize}
       \item Recursively call branch-and-bound on the constraints set
-        $$S \cup \{x_i \leqslant \lfloor v(x_i) \rfloor\}$$ and $I$.
+        $$S \cup \{x_i \leqslant \lfloor v(x_i) \rfloor\}$$
+        
+        and $I$.
         If a solution $v'$ is found, return it.
       \item Recursively call branch-and-bound on the constraints set
-        $$S \cup \{x_i \geqslant \lceil v(x_i) \rceil\}$$ and $I$.
+        $$S \cup \{x_i \geqslant \lceil v(x_i) \rceil\}$$
+        
+        and $I$.
         If a solution $v'$ is found, return it.
     \end{itemize}
   \item If after the branching step no solution is found, return \cunsat{}.
@@ -281,7 +289,7 @@ let us examine the following ILP:
 \end{equation}
 
 This problem has no solution, and its relaxation -- that is the problem
-composed by the linear inequalities, without the integrality constaints -- is
+composed by the linear inequalities, without the integrality constraints -- is
 unbounded, as shown in figure \ref{bbloop}. Here is a possible execution of the
 branch-and-bound algorithm on this problem:
 \begin{itemize}
@@ -336,10 +344,12 @@ branch-and-bound algorithm on this problem:
 In this case, the problem is unbounded and makes the branch-and-bound algorithm
 loop. This is why we will try to add to the input problem $S$ constraints of
 the form $$-B \leqslant x_i \leqslant B$$
-for all variable $x_i$ to obtain a bounded problem $S'$, at the condition that
+
+for all variables $x_i$ to obtain a bounded problem $S'$.
+Moreover, we want to choose the bound $B$ such that
 the bounded problem $S'$ is satisfiable if and only if the problem $S$
-is satisfiable \footnote{We will informally call a solution of such a bounded
-problem a \textit{solution of small size.}}. 
+is satisfiable \footnote{We will call solutions of such a bounded
+problem \textit{solutions of small size.}}. 
 This is what we are going to see in the next section.
 
 \subsection{Obtaining Bounds for ILPs and MILPs}
@@ -359,13 +369,15 @@ large inequalities, it could be put in the form:
 
 or in the matrix form $Ax \leqslant b$ with
 $$A = (a_{ij})_{\substack{1 \leqslant i \leqslant n \\
-                          1 \leqslant j \leqslant p}}$$ and
+                          1 \leqslant j \leqslant p}}$$
+                          
+and
 $b = (b_j)_{1 \leqslant j \leqslant p}$. We identify a valuation of $n$
 variables to a vector of dimension $n$.
 
 Now, we are going to give the outline of a proof that MILPs admit a solution
 if and only if they admit a solution of small size. In what follows, we will
-focus on ILPs, but the results can be easily extended to MILPs. Most of the
+focus on ILPs, but the result can be easily extended to MILPs. Most of the
 definitions and results can be found in Schrijver's book
 \cite[Sections 7 and 16]{Schrijver1998}.
 
@@ -376,6 +388,7 @@ definitions and results can be found in Schrijver's book
       \left\{\sum_{i=0}^{n-1} \lambda_i x_i~|~
                \lambda_0, ..., \lambda_{n-1} \geqslant 0\right\}
   $$
+
   for some $x_0, ..., x_{n-1}$.
 \end{definition}
 
@@ -391,6 +404,7 @@ definitions and results can be found in Schrijver's book
 \begin{definition}[Polyhedron]
   A set of points $P$ is a \textsl{convex polyhedron} \ifff{}
   $$P = \{x~|~Ax \leqslant b\}$$
+
   for some matrix A and vector b.
 \end{definition}
 
@@ -490,31 +504,36 @@ polyhedron. The decomposition of this polyhedron is represented in figure
   Without loss of generality we can assume that the $y_i$'s are integral.
 
   Let us define
-  $$B = \left\{\sum_{i=0}^{s-1} \mu_i y_i~|~
+  $$D = \left\{\sum_{i=0}^{s-1} \mu_i y_i~|~
                0 \leqslant \mu_i \leqslant 1\right\}$$
-  and show that $$P = (Q + B)_I + C$$
+
+  and show that $$P = (Q + D)_I + C$$
 
   The easy inclusion is the following:
-  $$(Q + B)_I + C \subseteq P_I + C = P_I + C_I \subseteq (P + C)_I = P_I$$
+  $$(Q + D)_I + C \subseteq P_I + C = P_I + C_I \subseteq (P + C)_I = P_I$$
 
   To prove the other inclusion, let us introduce $x \in P$.
   There exists $q \in Q$ and $\lambda_0, ..., \lambda_{s-1}
-  \leqslant 0$ such that: $$x = q + \sum_{i < s} \lambda_i y_i$$ But for every
+  \leqslant 0$ such that: $$x = q + \sum_{i < s} \lambda_i y_i$$
+  
+  But for every
   $i$, $\lfloor \lambda_i \rfloor y_i$ is an integral vector, so
-  $$x - \sum_{i<n} \lfloor \lambda_i \rfloor y_i=
-      q + \sum_{i<n} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$$
-  is integral, and as $\sum_{i<n} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$
-  is contained in $B$:
-  $$x - \sum_{i<n} \lfloor \lambda_i \rfloor y_i \in (Q + B)_I$$
-  Finally: $$x \in (Q + B)_I + C$$
+  $$x - \sum_{i<s} \lfloor \lambda_i \rfloor y_i=
+      q + \sum_{i<s} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$$
 
-  $(Q + B)$ is bounded, so $(Q + B)_I$ is the convex hull of a finite set, it is
-  a polytope. If we take $Q' = (Q + B)_I$, we have the result.
+  is integral, and as $\sum_{i<s} (\lambda_i - \lfloor \lambda_i \rfloor) y_i$
+  is contained in $D$:
+  $$x - \sum_{i<s} \lfloor \lambda_i \rfloor y_i \in (Q + D)_I$$
+
+  Finally: $$x \in (Q + D)_I + C$$
+
+  $(Q + D)$ is bounded, so $(Q + D)_I$ is the convex hull of a finite set, it is
+  a polytope. If we take $Q' = (Q + D)_I$, we have the result.
 \end{proof}
 
 A graphical representation of this proof is given in figure
 \ref{integer_hull_decomp}, with again the polytope defined by the problem
-\ref{eqdecomp}. As we can see, $(Q + B)_I + C$ (the
+\ref{eqdecomp}. As we can see, $(Q + D)_I + C$ (the
 green and yellow areas) is exactly the integer hull of the polyhedron.
 
 \begin{figure}[h]
@@ -540,13 +559,13 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
     \coordinate (E) at (7.5, 2.5);
     \coordinate (E') at (7.5, 2.75);
 
-    % Extremal points of (Q + B)
+    % Extremal points of (Q + D)
     \coordinate (B') at (1.5, 5);
     \coordinate (B'') at (3.5, 6);
     \coordinate (D') at (5.5, 1.5);
     \coordinate (D'') at (6.5, 4.5);
 
-    % Extremal points of (Q + B)_I
+    % Extremal points of (Q + D)_I
     \coordinate (I) at (2, 5);
     \coordinate (J) at (1, 3);
     \coordinate (K) at (1, 2);
@@ -562,7 +581,7 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
     \draw[thin] (C) -- (D);
     \draw[thin] (D) -- (E);
 
-    % Drawing lines of the polytope (Q + B)_I + C
+    % Drawing lines of the polytope (Q + D)_I + C
     \draw[thick] (A') -- (J);
     \draw[thick] (M) -- (E');
 
@@ -587,8 +606,8 @@ green and yellow areas) is exactly the integer hull of the polyhedron.
 
   \caption{Decomposition of the integer hull of the polytope defined by the
            problem \ref{eqdecomp}.
-           The boundary of the set $(Q + B)$ is represented
-           in red and $(Q + B)_I$ is represented in green.}
+           The boundary of the set $(Q + D)$ is represented
+           in red and $(Q + D)_I$ is represented in green.}
 \end{figure}
 
 \textbf{Remark:}
@@ -596,46 +615,27 @@ Using the notations of the previous proof:
 \begin{displaymath}
   P \cap \ints^n \neq \emptyset \Longleftrightarrow
   P_I \neq \emptyset            \Longleftrightarrow
-  (Q + B)_I \neq \emptyset      \Longleftrightarrow
-  (Q + B) \cap \ints^n \neq \emptyset
+  (Q + D)_I \neq \emptyset      \Longleftrightarrow
+  (Q + D) \cap \ints^n \neq \emptyset
 \end{displaymath}
 
-% TODO: this is incomplete and not very clear
-%Moreover, we can choose a point that is a combination of a linearly independant
-%family of vectors of $\{y_0, ..., y_{s-1}\}$ \footnote{using the fundamental
-%theorem of linear inequalities}. In other words ...
-
-Moreover, we can assume that the vectors $\{y_0, ..., y_{s-1}\}$ are linearly
-independant
-\footnote{It is natural using the fundamental theorem of inequalities that
-implies that every point of the cone $C$ can be expressed as a non-negative
-linear combination of an independant set of $\{y_0, ..., y_{s-1}\}$. Using
-this, we can prove a similar result in the general case.},
-which implies that $s \leqslant n$.
-
-Finally, if $Q = \hull~\{x_0, ..., x_{k-1}\}$, then
-%$$(Q + B) \cap \ints^n \neq \emptyset \Longleftrightarrow
-%  (Q + B) \cap \llbracket -B, B \rrbracket ^ n \neq \emptyset
-%$$
-for every $z \in Q + B$, $z \in [-B, B]^n$
-where
-$$B = \max_{i, j} |x_{ij}| + n \cdot \max_{i, j} |y_{ij}|$$
-
-
-With this remark, what remains to do is to find a bound $B$ that depends on the
+Hence, there is an integral point in the polyhedron $P$ \ifff{} there is an
+integral point in the (bounded) polytope $(Q + D)$.
+What remains to do is to find a bound $B$ that depends on the
 parameters of the problem. To do so, a solution is to generalize the previous
-theorems to incorporate bounds.
-We will use the notation
+theorems to incorporate bounds. We will use the notation
 $\llbracket a, b \rrbracket$ for the set of integers in the interval $[a, b]$.
 
 \begin{theorem}[Generalized Farkas-Minkowsky-Weyl Theorem]
-  A set $C$ is a finitely generated cone \ifff{} is is a polyhedral cone.
+  A set $C$ is a finitely generated cone \ifff{} it is a polyhedral cone.
 
   Moreover, if $C = \{x~|~Ax \leqslant 0\}$ and
   $A \in \llbracket -m, m \rrbracket^{p \times n}$ with $m \geqslant 1$,
   there exists a finite set $Y$ such that
   $Y \subseteq \llbracket -B, B \rrbracket^n$
-  and $$C = \cone~Y$$ where
+  and $$C = \cone~Y$$
+  
+  where
   $$B = (n - 1)! \cdot m^{n-1}$$
 \end{theorem}
 
@@ -646,9 +646,11 @@ $\llbracket a, b \rrbracket$ for the set of integers in the interval $[a, b]$.
   Moreover, if $P = \{x~|~Ax \leqslant b\}$ with
   $A \in \llbracket -m, m \rrbracket^{p \times n}$,
   $b \in \llbracket -m, m \rrbracket^p$, and $m \geqslant 1$,
-  then there exists finite sets
+  then there exist finite sets
   $Q \subseteq [-B, B]$ and $X \subseteq \llbracket -B, B \rrbracket$ such that
-  $$P = \hull~Q + \cone~X$$ with $$B = n! \cdot m^n$$
+  $$P = \hull~Q + \cone~X$$
+  
+  with $$B = n! \cdot m^n$$
 \end{corollary}
 
 We finally have the desired result:
@@ -659,7 +661,9 @@ We finally have the desired result:
   $A \in \llbracket -m, m \rrbracket^{p \times n}$,
   $b \in \llbracket -m, m \rrbracket^p$ and $m \geqslant 1$, then
   $$P \cap \ints^n \neq \emptyset \Longleftrightarrow
-  P \cap \llbracket -B, B \rrbracket^n \neq \emptyset$$ where
+  P \cap \llbracket -B, B \rrbracket^n \neq \emptyset$$
+  
+  where
   $$B = (n + 1)! \cdot m^n$$
 \end{corollary}
 
@@ -669,7 +673,9 @@ encompasses MILPs and strict inequalities.
 \begin{theorem}[Existence of small solutions for MILPs]
   \label{small-milp}
   If $I$ is a subset of $\llbracket 1, n \rrbracket$ and
-  $$P = \{x~|~Ax \leqslant b \wedge A'x < b'\}$$ with
+  $$P = \{x~|~Ax \leqslant b \wedge A'x < b'\}$$
+  
+  with
   $A \in \llbracket -m, m \rrbracket^{p \times n}$,
   $b \in \llbracket -m, m \rrbracket^p$,
   $A' \in \llbracket -m, m \rrbracket^{p' \times n}$,
@@ -679,44 +685,49 @@ encompasses MILPs and strict inequalities.
       \Longleftrightarrow
     \{x \in P~|~\forall x_i \in I.~x_i \in \llbracket -B, B \rrbracket\}
       \neq \emptyset$$
+
   where
   $$B = (n + 1)! \cdot m^n$$
 \end{theorem}
 
 \textbf{Remark:} If we take the previously defined bound $B$:
 $$\log B \approx n \log n + n \log m$$
-This way, we can use this bound $B$ to show that the number of bits
+
+Hence, the number of bits
 necessary to represent numbers in the interval $\llbracket -B, B \rrbracket$
-is polynomial in the size of the input, and so that ILPs are NP.
+is polynomial in the size of the input. Therefore, a small solution $v$ to
+an ILP can be used as a certificate of polynomial size, and ILPs are NP.
 
 \section{Formalization in Isabelle}
 As we have presented a method to solve MILPs, we can focus on its
 formalization, which has been the main part of the work during this internship.
-It consisted first in the formalization of Schrijver results concerning linear
-inequalities (section \ref{forlineq}), then in the implementation and the proof
-of correction of a branch-and-bound algorithm (section \ref{forbb}).
+It consisted in the formalization of Schrijver results concerning linear
+inequalities as described in section \ref{forlineq}), then in the
+implementation and the proof of correction of the branch-and-bound algorithm
+as described in section \ref{forbb}.
 
-\subsection{Formalization of Results concerning Linear Inequalities}
+\subsection{Formalization of Schrijver's Results concerning Linear
+            Inequalities}
 \label{forlineq}
-This part concerns the formalization of the results from Schijver's book
-described in section \ref{schrijverbnd}.
+This part is about the formalization of the results from Schijver's book
+described in section \ref{schrijverbnd} in Isabelle.
 Also, other results including Farkas' lemma and the Carathéodory's theorem
 have been formalized.
+In total, 5551 lines of proofs were written. The work was published in the
+\textit{Archive for Formal Proofs} (AFP), a collection of proof libraries in
+Isabelle \cite{Linear_Inequalities-AFP}.
 
 This was done in collaboration with René Thiemann and Ralph Bottesch:
 \begin{itemize}
   \item René included bounds for the various operations that are performed 
-  when executing the decomposition theorem.  Moreover, he verified Theorem~\ref{meyer theorem}
-  of Meyer. 
+  when executing the decomposition theorem.  He also verified
+    Theorem~\ref{meyer theorem} of Meyer. 
   \item Ralph and René formalized the fundamental theorem of linear
     inequalities.
   \item I mainly focused on the demonstration of the Farkas-Minkowsky-Weyl and
     the decomposition theorem.
 \end{itemize}
 
-In total, 5551 lines of proofs were written. The work was published in the
-\textit{Archive for Formal Proofs} (AFP), a collection of proof libraries in
-Isabelle \cite{Linear_Inequalities-AFP}.
 
 The formalization follows the outline given in section \ref{schrijverbnd}.
 Several theorems, for example the Farkas-Minkowsky-Weyl theorem, have a general
@@ -739,26 +750,32 @@ where the following Isabelle notations are used:
   \item $\mathtt{det\_bound}~n~m$ is $n! \cdot m^n$.
 \end{itemize}
 
-A difficulty I was confronted to is the different definitions of linear
-combinations in Isabelle. Indeed, the standard definition is
+A difficulty I was confronted with is the variety of definitions for linear
+combinations in Isabelle. The standard definition is
 $$\mathtt{lincomb}~c~V = \sum_{v \in V} c(v) \cdot v$$
+
 where $V$ is a set of vectors and $c$ is a map from vectors to scalars.
 
 A problem that can occur is the distributivity when we multiply this sum by
 a matrix. Indeed, it is clear that
-$$A \sum_i \lambda_i x_i = \sum_i \lambda_i \cdot A x_i.$$ But this equality
+$$A \sum_i \lambda_i x_i = \sum_i \lambda_i \cdot A x_i.$$
+
+But this equality
 cannot be simply stated with the operator $\mathtt{lincomb}$ Indeed, it is
-possible that there exists two vectors $x_0$ and $x_1$ such that
+possible that there exist two vectors $x_0$ and $x_1$ such that
 $A x_0 = A x_1$. If we want to express $\sum_i \lambda_i \cdot A x_i$ using
 $\mathtt{lincomb}$, then the scalar coefficient associated to $A x_0$ is
-neither $c(x_0)$ nor $c(x_1)$ but something like $\sum_{x . A x = A x_0} c(x)$,
+neither $c(x_0)$ nor $c(x_1)$ but $\sum_{x . A x = A x_0} c(x)$,
 which is more complicated to work with. More generally, this problem occurs
-everytime we want to state the equality
-$$f(\sum_i \lambda_i x_i) = \sum_i \lambda_i f(x_i)$$ where $f$ is a linear map.
+every time we want to prove the equality
+$$f(\sum_i \lambda_i x_i) = \sum_i \lambda_i f(x_i)$$
+
+where $f$ is a linear map.
 
 A solution to tackle this problem is to use linear combinations over lists,
 defined this way:
 $$\mathtt{lincomb\_list}~c~\mathtt{Vs} = \sum_{i = 0}^{l-1} c(i) \cdot v_i$$
+
 where $\mathtt{Vs} = [v_0, ..., v_{l-1}]$ is a list of vectors and $c$ is a
 function mapping integers to scalars. 
 
@@ -778,18 +795,15 @@ We can then use this definition to define convex combinations:
 and then define convex hulls:
 \Snippet{convex-hull}
 \Snippet{convex-hull-list}
-Finally, we have to show that these two definitions are equivalent:
+Finally, we can show that these two definitions are equivalent:
 \Snippet{convex-hull-equivalence}
-
-This kind of equivalence is not always trivial to prove. For example, it took
-me around 300 lines of code to prove the previous result.
 
 \subsection{Formalization of a Branch-and-Bound Algorithm}
 \label{forbb}
 
 The next part is the formalization of a branch-and-bound algorithm, as
 described in the section \ref{bbdescr}. The idea was to state and prove the
-correctness of a simple algorithm, without any optimization for the moment.
+correctness of a simple algorithm, without any optimization.
 
 I first developped a function $\mathtt{branch\_and\_bound\_core}$ that takes
 four arguments:
@@ -802,17 +816,16 @@ four arguments:
     upper bounds.
 \end{itemize}
 It returns either $\mathtt{Some}~v$ is a solution $v$ within the bounds is
-found, or $\mathtt{None}$ otherwise.
+found, or $\mathtt{None}$.
 The code of this function can be found in appendix \ref{bbcode}
 
 The goal of the arguments \texttt{lb} and \texttt{ub} is to bound the problem.
-This way, I can prove that this function always terminates. To do so, a
+This way, I ensure that this function always terminates. To do so, a
 convenient way in Isabelle is to use a \textit{measure}. It is function mapping
-the arguments of the function \texttt{f} that we want to prove its termination
-to natural numbers. If we prove that at each recursive call the measure
-strictly decreases, then there is no way that a infinite sequence of recursive calls
-can happen and the function always terminates. The measure I used is the
-following:
+the arguments of the function \texttt{f} to natural numbers. If we prove that
+at each recursive call the measure strictly decreases, then
+an infinite sequence of recursive calls cannot happen and the function always
+terminates. The measure I used is the following:
 $$
 \max\left(
      0,
@@ -820,8 +833,17 @@ $$
      \right)
 $$
 
+Indeed, if there is a rational solution $v$ that is not a mixed-integer
+solution, then $\sum (\mathtt{ub}(x_i) - \mathtt{lb}(x_i)) > 0$.
+Furthermore, if $v(x_i) \notin \ints$, if we do a recursive call with
+$\mathtt{ub}(x_i)$ substituted by $\lfloor v(x_i) \rfloor$, as
+$v(x_i) \leqslant \mathtt{ub}(x_i)$,
+$\lfloor v(x_i) \rfloor < \mathtt{ub}(x_i)$ so the measure strictly decreases
+at the recursive calls. The same happens if $\mathtt{lb}(x_i)$ is substituted
+by $\lceil v(x_i) \rceil$.
+
 Once the termination proved, I proved correctness properties, the first is that
-if a valuation is found it satisfies the MILP:
+if a valuation is found, it satisfies the MILP:
 \Snippet{bbcore-sat}
 and the other is that if no valuation is found, then there is no valuation
 \texttt{v} that satisfies the MILP and such that the valuations of the integral
@@ -847,7 +869,7 @@ considerably simplified the proofs (around 80 lines of proof were saved).
 Afterwards, some work to convert rational constraints to integral constaints
 is needed. 
 I use it to define a function \texttt{compute\_bound} that maps a list of
-constraints to the desired bound, and prove that:
+constraints to the desired bound. I prove that:
 \Snippet{compute-bound}
 
 Finally, I am able to state a complete MILP-solver based on the
@@ -857,54 +879,54 @@ and to prove its correction:
 \Snippet{branch-and-bound-sat}
 \Snippet{branch-and-bound-unsat}
 
-In total, the formalization of this algorithm takes 1062 lines of code. You can
-find the state of my work at the end of this internship in this repository:
-\url{https://github.com/Cemoixerestre/MILP-Isabelle}. Notice that this is only
-a temporary repository, this work is not finished as you will see in the
-next section.
+In total, the formalization of this algorithm takes 1062 lines of code.
+It can be consulted in at:
+\url{https://github.com/Cemoixerestre/MILP-Isabelle}.
 
 \section{Future Work}
 Even if I have written and proved the correctness of a branch-and-bound
 algorithm, the work is not yet finished. Indeed, some tasks are needed before
 having a more effective formalized MILP-solver with an incremental interface.
-Here is the outline of what should be done after my internship to complete the
-work.
+Here is the prospective work to complete the project.
 
 \subsection{Using the Incremental Interface}
-We can remark that for the branch-and-bound algorithm, at the branching step, we
-only try to solve problems with a single constraint added to the original
+We can remark that for the branch-and-bound algorithm, at the branching step,
+we only try to solve problems with a single constraint added to the original
 problem. This is why it should be interesting to use the incremental interface
-describe in section \ref{smt}. Indeed, in the current implementation, the
-computation (including the preprocessing steps) is always made from scratch.
-
-The problem is that in the current interface, the internal state is initialized
-with a (finite) list of constraints, and only constraints of this list can be
-asserted. To efficiently use the incrementality, this interface should be
-rewritten so that arbitrary constraints can be asserted.
+described in \cite{Thiemann2018, BHT2019}. In the current implementation,
+the computation (including the preprocessing steps) is always made from
+scratch. The difficulty is that in the current interface, the internal state is
+initialized with a (finite) list of constraints, and only constraints of this
+list can be asserted. To efficiently use the incrementality, this interface
+should be upgraded so that arbitrary constraints can be asserted.
 
 \subsection{Gomory Cuts}
 
 Suppose that a valuation $v$ such that $v \vDash S$ has been found but that
 $v \not{\vDash_I} S$. A \textit{cut} is a
 linear constraint $c$ such that $v$ does not satisfy $c$ but for every
-mixed-integer solution $v \vDash_I S$, $v$ satisfies $c$. The goal of a cut is
-to prune non-integral solutions of the problems without affecting integral
+mixed-integer solution $v'$, $v'$ satisfies $c$. The goal of a cut is
+to prune non-integral solutions of the problems while keeping the same integral
 solutions.
 
-For example, let us take the following ILP:
+For example, let us take the following problem:
 \begin{equation}
   \label{cuteq}
   \left\{
-  \begin{array}{ccccc}
-    2x  & + & 10y & \geqslant & 5 \\
+  \begin{array}{rcccc}
+     2x & + & 10y & \geqslant & 5 \\
     -2x & + & 10y & \leqslant & 5
   \end{array}
-  \right|
-  x, y \in \ints
+  \right.
+  %\right|
+  %x, y \in \ints
 \end{equation}
+
 $(0, \frac{1}{2})$ is a non-integral solution. But we can remark that the
-following constraint $$x \geqslant \frac{5}{2}$$ is satisfied by every integral
-solution of the problem, but not by $(0, \frac{1}{2})$. We will call this
+following constraint $$x \geqslant \frac{5}{2}$$
+
+is satisfied by all of the
+solutions of the problem, but not by $(0, \frac{1}{2})$. We will call this
 constraint the \textit{cut}. A graphical representation can be found in figure
 \ref{cutfig}.
 
@@ -941,33 +963,34 @@ constraint the \textit{cut}. A graphical representation can be found in figure
 
     \fill[fill=blue, opacity=0.5]
       (A) -- (A'') -- (C'') -- (C) -- cycle;
-    \fill[fill=blue, opacity=0.1]
+    \fill[fill=blue, opacity=0.2]
       (A'') -- (B) -- (C'') -- cycle;
   \end{tikzpicture}
 
-  \caption{Graphical representation of the solutions of the problem
-    \ref{cuteq}. The solutions lie in the blue and light blue areas. More
-    precisely, the solutions satisfying the cut lie in the blue area.}
+  \caption{Solutions of the problem \ref{cuteq}.
+          The solutions to the problem satisfying the cut lie in the dark blue
+          area. The other solutions lie in the light blue area.
+          }
 \end{figure}
 
 A general method to obtain cuts is described in \cite[Section 4]{Dutertre2006}.
 These cuts are called \textit{Gomory cuts}. The combination of the
 branch-and-bound algorithm with cut generation is called
-\textit{branch-and-cut} and a dramatic acceleration of the branch-and-bound
-algorithm has been observed \cite{Ongoing2012}. %TODO: reformulate
+\textit{branch-and-cut} and it experimentally outerforms the branch-and-bound
+algorithm \cite{Ongoing2012}.
 
-It is planned to incorporate Gomory cuts in this branch-and-bound algorithm,
-and to prove its correction. Like in the previous section, it would
+We plan to incorporate Gomory cuts in this branch-and-bound algorithm,
+and to prove its correction. As in the previous section, it would
 be useful to extend the following interface so that arbitrary constraints (such
-as Gomory cuts) can be asserted.
+as Gomory cuts) could be asserted.
 
 \subsection{Finalization}
-To finish the work, the branch-and-cut function should be extended to an
+As a least contribution, the branch-and-cut function should be extended to an
 incremental interface similar to the existing interface for linear problems so
 that it could be used efficiently by a SMT-solver.
 
-Also, René have already started to export the code to do measure its execution
-time. It could be interesting to measure to difference obtained by each of the
+Also, René has already started to export the code to measure its execution
+time. It could be interesting to measure the difference obtained by each of the
 previously described optimizations. Finally, it is planned to publish this
 work in AFP.
 
@@ -991,15 +1014,17 @@ be plugged in a SMT-solver.
 Let us solve the following SMT-instance (based on linear arithmetic):
 $$\Phi \equiv (A \vee B \vee C) \wedge (\neg A \vee B) \wedge
               (\neg A \vee C \vee D) \wedge (\neg C \vee D)$$
+
 with
 \begin{displaymath}
-\begin{array}{lccccl}
-  A & \equiv & x & + & y & \geqslant 3 \\
-  B & \equiv & x &   &   & \leqslant 1 \\
-  C & \equiv &   &   & y & \leqslant 1 \\
-  D & \equiv & y & - & x & < 2         \\
+\begin{array}{cclcccc}
+  A & \equiv & (x & + & y & \geqslant & 3) \\
+  B & \equiv & (x &   &   & \leqslant & 1) \\
+  C & \equiv & (  &   & y & \leqslant & 1) \\
+  D & \equiv & (y & - & x & <         & 2) \\
 \end{array}
 \end{displaymath}
+
 using DPLL($T$). First, let us interpret $\Phi$ as a SAT-formula and find an
 valuation that satisfies it. For example:
 \begin{itemize}
@@ -1020,11 +1045,11 @@ assignment to the conjunction $A \wedge B \wedge C \wedge D$, which is equivalen
 to the system:
 \begin{displaymath}
   \left\{
-  \begin{array}{ccccr}
-    x  & + & y & \geqslant 3 & (A) \\
-    x  &   &   & \leqslant 1 & (B) \\
-       &   & y & \leqslant 1 & (C) \\
-    y  & - & x & < 2         & (D) \\
+  \begin{array}{cccccc}
+    x  & + & y & \geqslant & 3 & (A) \\
+    x  &   &   & \leqslant & 1 & (B) \\
+       &   & y & \leqslant & 1 & (C) \\
+    y  & - & x & <         & 2 & (D) \\
   \end{array}
   \right.
 \end{displaymath}
@@ -1036,6 +1061,7 @@ $\Phi$ must violate at least one of these constraints, so we can deduce that
 the clause $(\neg A \vee \neg B \vee \neg C)$ is true. Instead of solving
 $\Phi$, we will try to solve the formula
 $$\Phi' = \Phi \wedge (\neg A \vee \neg B \vee \neg C)$$
+
 We need to backtrack, but we can notice that we could bactrack just before
 the choice to affect $C$ to 1 was made. So let us backtrack to $c_2$, where
 only the variables $A$ and $B$ are affected.
@@ -1052,11 +1078,11 @@ SAT-formula. We have to find an assignment that satisfies the conjunction
 $A \wedge B \wedge \neg C \wedge D$, which is equivalent to the system:
 \begin{displaymath}
   \left\{
-  \begin{array}{ccccr}
-    x  & + & y & \geqslant 3 & (A) \\
-    x  &   &   & \leqslant 1 & (B) \\
-       &   & y & > 1         & (\neg C) \\
-    y  & - & x & < 2         & (D) \\
+  \begin{array}{cccccc}
+    x  & + & y & \geqslant & 3 & (A) \\
+    x  &   &   & \leqslant & 1 & (B) \\
+       &   & y & >         & 1 & (\neg C) \\
+    y  & - & x & <         & 2 & (D) \\
   \end{array}
   \right.
 \end{displaymath}
@@ -1072,7 +1098,7 @@ To understand the code:
 \begin{itemize}
   \item \texttt{bounds\_to\_constraints Is lb ub} returns a list containing the
     constraints $x_i \geqslant \mathtt{lb}~x_i$ and
-    $x_i \leqslant \mathtt{ub}~x_i$ for all element $x_i$ of the list
+    $x_i \leqslant \mathtt{ub}~x_i$ for all elements $x_i$ of the list
     \texttt{Is}.
   \item `` \texttt{@} '' is the symbol used for list concatenation. In this case,
     \linebreak \texttt{cs @ bounds\_to\_constraints Is lb ub} is the list
@@ -1084,7 +1110,7 @@ To understand the code:
     $\langle \mathtt{v} \rangle$ is a rational valuation satisfying these
     constraints.
   \item The function \texttt{find} takes as arguments a predicate \texttt{f}
-    and a list \texttt{Is} and returns either $\mathtt{Some}~x_i$ where $x_i$ is
+    and a list \texttt{Is} and returns $\mathtt{Some}~x_i$ where $x_i$ is
     an element of \texttt{Is} such that $\mathtt{f}~x_i$ is true, or
     \texttt{None} if no such element exists.
 \end{itemize}
